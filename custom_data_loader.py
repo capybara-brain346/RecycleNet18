@@ -1,7 +1,6 @@
 import os
 import polars as pl
 from PIL import Image
-import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import config
@@ -21,13 +20,13 @@ class ImageLoader(Dataset):
                 self.data["Image_paths"].append(images)
                 self.data["Class_names"].append(class_name)
 
-        print(self.data)
+        # print(self.data)
 
         self.class_map = {
             class_name: idx for idx, class_name in enumerate(os.listdir(self.path))
         }
 
-        print(self.class_map)
+        # print(self.class_map)
 
         self.df = pl.DataFrame(self.data)
 
@@ -48,8 +47,8 @@ class ImageLoader(Dataset):
             [transforms.Resize(self.img_size), transforms.ToTensor()]
         )
 
-        print(f"Class mappings -> {self.class_map}")
-        print(f"Image size -> {self.img_size}")
+        # print(f"Class mappings -> {self.class_map}")
+        # print(f"Image size -> {self.img_size}")
 
     def __getitem__(self, idx: int):
         image_path, label, label_idx = self.df.row(idx)

@@ -1,4 +1,5 @@
-import os
-import config
+import polars as pl
 
-print(os.listdir(config.DATA_BASE_DIR))
+df = pl.read_json("./data_snapshot_formatted.json")
+
+print(len(df["Class_names"].value_counts()["Class_names"]))
