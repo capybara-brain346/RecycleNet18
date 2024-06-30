@@ -1,7 +1,7 @@
 import json
 
-input_file = "./data_snapshot.json"
-output_file = "./data_snapshot_formatted.json"
+input_file = "data_snapshot.json"
+output_file = "data_snapshot_formatted.json"
 
 with open(input_file, "r", encoding="utf-8") as f:
     json_data = json.load(f)

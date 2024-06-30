@@ -1,5 +1,5 @@
 import os
-import config
+from config import Config
 import pandas as pd
 from pydantic import BaseModel
 
@@ -25,7 +25,7 @@ class Validator(BaseModel):
 
 
 if __name__ == "__main__":
-    data_path = config.DATA_BASE_DIR
+    data_path = Config.DATA_BASE_DIR
     data_validation = Validator(path=data_path)
-    data_validation.log_classes()
-    data_validation.log_image_count()
+    print(data_validation.log_classes())
+    print(data_validation.log_image_count())

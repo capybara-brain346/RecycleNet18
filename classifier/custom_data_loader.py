@@ -3,12 +3,33 @@ import polars as pl
 from PIL import Image
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
-import config
+from config import Config
 import glob
+
+DATA_TRANSFORMS = {
+    "train": transforms.Compose(
+        [
+            transforms.Resize((256, 256)),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.7485, 0.7274, 0.7051], std=[0.2481, 0.2566, 0.2747]
+            ),
+        ]
+    ),
+    "validate": transforms.Compose(
+        [
+            transforms.Resize((256, 256)),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.7485, 0.7274, 0.7051], std=[0.2481, 0.2566, 0.2747]
+            ),
+        ]
+    ),
+}
 
 
 class ImageLoader(Dataset):
-    def __init__(self, path: str):
+    def __init__(self, path: str, data_transform: transforms):
         super().__init__()
         self.path = path
         img_files = glob.glob(self.path + "/*")
@@ -30,7 +51,7 @@ class ImageLoader(Dataset):
 
         self.df = pl.DataFrame(self.data)
 
-        print(self.df)
+        # print(self.df)
 
         self.df = self.df.with_columns(
             self.df["Class_names"]
@@ -39,13 +60,9 @@ class ImageLoader(Dataset):
             .cast(pl.Int32)
         )
 
-        self.img_size = (256, 256)
+        # self.df.write_json("data_snapshot.json", row_oriented=True)
 
-        self.df.write_json("./data_snapshot.json", row_oriented=True)
-
-        self.transform = transforms.Compose(
-            [transforms.Resize(self.img_size), transforms.ToTensor()]
-        )
+        self.transform = data_transform
 
         # print(f"Class mappings -> {self.class_map}")
         # print(f"Image size -> {self.img_size}")
@@ -61,8 +78,8 @@ class ImageLoader(Dataset):
 
 
 if __name__ == "__main__":
-    path = config.DATA_BASE_DIR
-    dataset = ImageLoader(path=path)
+    path = Config.DATA_BASE_DIR
+    dataset = ImageLoader(path=path, data_transform=DATA_TRANSFORMS["train"])
     loader = DataLoader(dataset=dataset, batch_size=10, shuffle=True)
     for images, labels in loader:
         print(f"Images batch shape: {images.shape}")
