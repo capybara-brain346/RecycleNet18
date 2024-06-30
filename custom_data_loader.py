@@ -55,7 +55,7 @@ class ImageLoader(Dataset):
 
         self.df = self.df.with_columns(
             self.df["Class_names"]
-            .apply(lambda x: self.class_map[x])
+            .apply(lambda x: self.class_map[x], return_dtype=int)
             .alias("Class_indexes")
             .cast(pl.Int32)
         )
