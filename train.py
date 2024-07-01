@@ -53,14 +53,12 @@ def training_loop(model, loss_func, optimizer, epochs, dataloader, device):
     return model
 
 
-def validate(model, dataset, device):
+def validate(model, dataset, device, loss_func):
     logger.info("Starting validation...")
     model.eval()
     correct = 0
     total = 0
     running_loss = 0.0
-
-    criterion = nn.CrossEntropyLoss()
 
     with torch.no_grad():
         for images, labels in dataset:
@@ -68,7 +66,7 @@ def validate(model, dataset, device):
             labels = labels.to(device)
 
             outputs = model(images)
-            loss = criterion(outputs, labels)
+            loss = loss_func(outputs, labels)
 
             running_loss += loss.item() * images.size(0)
             _, preds = torch.max(outputs.data, 1)
@@ -164,7 +162,13 @@ def main() -> None:
         device=device,
     )
 
-    validate(model=trained_model, dataset=validation_loader, device=device)
+    validate(
+        model=trained_model,
+        dataset=validation_loader,
+        device=device,
+        loss_func=loss_function,
+    )
+
     torch.save(trained_model.state_dict(), "./saved_models/01_7_24_resnet_model.pth")
 
 
