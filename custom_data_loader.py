@@ -16,7 +16,16 @@ DATA_TRANSFORMS = {
             ),
         ]
     ),
-    "validate": transforms.Compose(
+    "validation": transforms.Compose(
+        [
+            transforms.Resize((256, 256)),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.7485, 0.7274, 0.7051], std=[0.2481, 0.2566, 0.2747]
+            ),
+        ]
+    ),
+    "test": transforms.Compose(
         [
             transforms.Resize((256, 256)),
             transforms.ToTensor(),
@@ -29,26 +38,37 @@ DATA_TRANSFORMS = {
 
 
 class ImageLoader(Dataset):
-    def __init__(self, path: str, data_transform: transforms):
+    def __init__(self, path: str, data_transform: transforms, split: str):
         super().__init__()
         self.path = path
         img_files = glob.glob(self.path + "/*")
 
-        self.data = {"Image_paths": [], "Class_names": []}
+        image_paths, class_names = [], []
+
         for classes in img_files:
             class_name = classes.split("\\")[-1]
-            for images in glob.glob(classes + "/*"):
-                self.data["Image_paths"].append(images)
-                self.data["Class_names"].append(class_name)
+            images = glob.glob(classes + "/*")
+            num_images = len(images)
 
-        # print(self.data)
+            if split == "train":
+                start_idx, end_idx = 0, int(0.6 * num_images)
+            elif split == "validation":
+                start_idx, end_idx = int(0.6 * num_images), int(0.9 * num_images)
+            else:
+                start_idx, end_idx = int(0.9 * num_images), num_images
+
+            for idx in range(start_idx, end_idx):
+                image_paths.append(images[idx])
+                class_names.append(class_name)
+
+        self.image_paths = image_paths
+        self.class_names = class_names
 
         self.class_map = {
             class_name: idx for idx, class_name in enumerate(os.listdir(self.path))
         }
 
-        # print(self.class_map)
-
+        self.data = {"Image_paths": self.image_paths, "Class_names": self.class_names}
         self.df = pl.DataFrame(self.data)
 
         # print(self.df)
@@ -79,9 +99,32 @@ class ImageLoader(Dataset):
 
 if __name__ == "__main__":
     path = Config.DATA_BASE_DIR
-    dataset = ImageLoader(path=path, data_transform=DATA_TRANSFORMS["train"])
-    loader = DataLoader(dataset=dataset, batch_size=10, shuffle=True)
-    for images, labels in loader:
+
+    train_dataset = ImageLoader(
+        path=path, data_transform=DATA_TRANSFORMS["train"], split="train"
+    )
+    train_loader = DataLoader(dataset=train_dataset, batch_size=64, shuffle=True)
+    for images, labels in train_loader:
+        print(f"Images batch shape: {images.shape}")
+        print(f"Labels batch shape: {labels.shape}")
+        print("Labels:", labels)
+        break
+
+    val_dataset = ImageLoader(
+        path=path, data_transform=DATA_TRANSFORMS["validation"], split="validation"
+    )
+    val_loader = DataLoader(dataset=val_dataset, batch_size=64, shuffle=False)
+    for images, labels in val_loader:
+        print(f"Images batch shape: {images.shape}")
+        print(f"Labels batch shape: {labels.shape}")
+        print("Labels:", labels)
+        break
+
+    test_dataset = ImageLoader(
+        path=path, data_transform=DATA_TRANSFORMS["test"], split="test"
+    )
+    test_loader = DataLoader(dataset=test_dataset, batch_size=64, shuffle=False)
+    for images, labels in test_loader:
         print(f"Images batch shape: {images.shape}")
         print(f"Labels batch shape: {labels.shape}")
         print("Labels:", labels)
