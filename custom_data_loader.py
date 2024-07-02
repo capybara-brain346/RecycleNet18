@@ -72,32 +72,16 @@ class ImageLoader(Dataset):
 
 if __name__ == "__main__":
     path = Config.DATA_BASE_DIR
-
-    train_dataset = ImageLoader(
-        path=path, data_transform=DATA_TRANSFORMS["train"], split="train"
+    transform = transforms.Compose(
+        [
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+        ]
     )
+
+    train_dataset = ImageLoader(path=path, data_transform=transform, split="train")
     train_loader = DataLoader(dataset=train_dataset, batch_size=64, shuffle=True)
     for images, labels in train_loader:
-        print(f"Images batch shape: {images.shape}")
-        print(f"Labels batch shape: {labels.shape}")
-        print("Labels:", labels)
-        break
-
-    val_dataset = ImageLoader(
-        path=path, data_transform=DATA_TRANSFORMS["validation"], split="validation"
-    )
-    val_loader = DataLoader(dataset=val_dataset, batch_size=64, shuffle=False)
-    for images, labels in val_loader:
-        print(f"Images batch shape: {images.shape}")
-        print(f"Labels batch shape: {labels.shape}")
-        print("Labels:", labels)
-        break
-
-    test_dataset = ImageLoader(
-        path=path, data_transform=DATA_TRANSFORMS["test"], split="test"
-    )
-    test_loader = DataLoader(dataset=test_dataset, batch_size=64, shuffle=False)
-    for images, labels in test_loader:
         print(f"Images batch shape: {images.shape}")
         print(f"Labels batch shape: {labels.shape}")
         print("Labels:", labels)
