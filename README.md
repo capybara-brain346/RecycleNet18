@@ -1,6 +1,6 @@
 <h1 align="center" id="title">RecycleNet18</h1>
 
-<p align="center"><img src="https://socialify.git.ci/capybara-brain346/RecycleNet18/image?font=Source%20Code%20Pro&amp;language=1&amp;name=1&amp;owner=1&amp;pattern=Charlie%20Brown&amp;stargazers=1&amp;theme=Dark" alt="project-image"></p>
+<p align="center"><img src="https://socialify.git.ci/capybara-brain346/RecycleNet18/image?description=1&font=Source%20Code%20Pro&language=1&name=1&owner=1&pattern=Charlie%20Brown&theme=Dark" alt="project-image"></p>
 
 # RecycleNet: Recyclable Items Classification and Chatbot Guide
 
@@ -61,4 +61,8 @@ RecycleNet is a deep learning-based project designed to classify images of recyc
 - **Expand Classification Categories**: Include more types of recyclable items to cover a broader range of materials.
 - **Localization**: Provide region-specific recycling guidelines and regulations.
 - **Improved Chatbot Interaction**: Enhance the chatbot’s capabilities to offer more personalized and detailed assistance.
+
+## How to run locally
+
+- Coming soon...
 
