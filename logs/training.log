@@ -44,26 +44,7 @@ INFO:__main__:Starting validation...
 INFO:__main__:Validation accuracy: 78.51 %
 INFO:__main__:Validation loss: 0.7272
 INFO:__main__:Validation completed!
-INFO:__main__:
-Started training run at 2024-07-01 21:45:59.156816
-INFO:__main__:Loading images...
-INFO:__main__:Loaded 9000 training images and 4500 validation images
-INFO:__main__:Loaded ResNet18 with DEFAULT weights
-INFO:__main__:Starting training loop...
-INFO:__main__:
-Started training run at 2024-07-01 21:48:31.377567
-INFO:__main__:Loading images...
-INFO:__main__:Loaded 9000 training images and 4500 validation images
-INFO:__main__:Loaded ResNet18 with DEFAULT weights
-INFO:__main__:Starting training loop...
-INFO:__main__:
-Started training run at 2024-07-01 21:54:14.933734
-INFO:__main__:Loading images...
-INFO:__main__:Loaded 9000 training images and 4500 validation images
-INFO:__main__:Loaded ResNet18 with DEFAULT weights
-INFO:__main__:Starting training loop...
-INFO:__main__:
-Started training run at 2024-07-01 21:57:19.813634
+INFO:__main__:Started training run at 2024-07-01 21:57:19.813634
 INFO:__main__:Loading images...
 INFO:__main__:Loaded 9000 training images and 4500 validation images
 INFO:__main__:Loaded ResNet18 with DEFAULT weights
@@ -77,8 +58,7 @@ INFO:__main__:Starting validation...
 INFO:__main__:Validation accuracy: 63.18 %
 INFO:__main__:Validation loss: 1.3714
 INFO:__main__:Validation completed!
-INFO:__main__:
-Started training run at 2024-07-01 22:10:57.149411
+INFO:__main__:Started training run at 2024-07-01 22:10:57.149411
 INFO:__main__:Loading images...
 INFO:__main__:Loaded 9000 training images and 4500 validation images
 INFO:__main__:Loaded ResNet18 with DEFAULT weights
@@ -92,8 +72,7 @@ INFO:__main__:Starting validation...
 INFO:__main__:Validation accuracy: 75.27 %
 INFO:__main__:Validation loss: 0.8094
 INFO:__main__:Validation completed!
-INFO:__main__:
-Started training run at 2024-07-01 22:43:03.217262
+INFO:__main__:Started training run at 2024-07-01 22:43:03.217262
 INFO:__main__:Loading images...
 INFO:__main__:Loaded 9000 training images and 4500 validation images
 INFO:__main__:Loaded ResNet18 with DEFAULT weights
@@ -107,14 +86,7 @@ INFO:__main__:Starting validation...
 INFO:__main__:Validation accuracy: 15.49 %
 INFO:__main__:Validation loss: 5.5643
 INFO:__main__:Validation completed!
-INFO:__main__:
-Started training run at 2024-07-01 23:00:40.944586
-INFO:__main__:Loading images...
-INFO:__main__:Loaded 9000 training images and 4500 validation images
-INFO:__main__:Loaded ResNet18 with DEFAULT weights
-INFO:__main__:Starting training loop...
-INFO:__main__:
-Started training run at 2024-07-01 23:01:05.290339
+INFO:__main__:Started training run at 2024-07-01 23:01:05.290339
 INFO:__main__:Loading images...
 INFO:__main__:Loaded 9000 training images and 4500 validation images
 INFO:__main__:Loaded ResNet18 with DEFAULT weights
@@ -128,14 +100,7 @@ INFO:__main__:Starting validation...
 INFO:__main__:Validation accuracy: 76.73 %
 INFO:__main__:Validation loss: 0.7896
 INFO:__main__:Validation completed!
-INFO:__main__:
-Started training run at 2024-07-02 09:20:41.680540
-INFO:__main__:Loading images...
-INFO:__main__:Loaded 9000 training images and 4500 validation images
-INFO:__main__:Loaded ResNet18 with DEFAULT weights
-INFO:__main__:Starting training loop...
-INFO:__main__:
-Started training run at 2024-07-02 09:21:58.687399
+INFO:__main__:Started training run at 2024-07-02 09:21:58.687399
 INFO:__main__:Loading images...
 INFO:__main__:Loaded 9000 training images and 4500 validation images
 INFO:__main__:Loaded ResNet18 with DEFAULT weights

@@ -119,7 +119,7 @@ def main() -> None:
         ),
     }
 
-    logger.info(f"\nStarted training run at {datetime.datetime.now()}")
+    logger.info(f"Started training run at {datetime.datetime.now()}")
     logger.info("Loading images...")
 
     train_dataset = ImageLoader(
