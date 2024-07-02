@@ -22,10 +22,10 @@ logger = logging.getLogger(__name__)
 
 def training_loop(model, loss_func, optimizer, epochs, dataloader, device):
     logger.info("Starting training loop...")
+    model.train()
     for epoch in range(epochs):
         print(f"Epoch {epoch}/{epochs - 1}")
         print("-" * 10)
-        model.train()
         running_loss = 0.0
         running_correct = 0
 
@@ -85,33 +85,36 @@ def validate(model, dataset, device, loss_func):
 
 def main() -> None:
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print("Running on GPU..." if torch.cuda.is_available() else "Running on CPU...")
 
-    DATA_TRANSFORMS = {
+    BATCH_SIZE: int = 32
+    EPOCHS: int = 10
+    LEARNING_RATE: float = 0.001
+    BATCH_NORM_MEAN: list[float] = [0.485, 0.456, 0.406]
+    BATCH_NORM_STD: list[float] = [0.229, 0.224, 0.225]
+    DATA_TRANSFORMS: dict = {
         "train": transforms.Compose(
             [
-                transforms.Resize((256, 256)),
+                transforms.Resize((224, 224)),
                 transforms.ToTensor(),
                 transforms.Normalize(
-                    mean=[0.7485, 0.7274, 0.7051], std=[0.2481, 0.2566, 0.2747]
+                    mean=BATCH_NORM_MEAN,
+                    std=BATCH_NORM_STD,
                 ),
             ]
         ),
         "validation": transforms.Compose(
             [
-                transforms.Resize((256, 256)),
+                transforms.Resize((224, 224)),
                 transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=[0.7485, 0.7274, 0.7051], std=[0.2481, 0.2566, 0.2747]
-                ),
+                transforms.Normalize(mean=BATCH_NORM_MEAN, std=BATCH_NORM_STD),
             ]
         ),
         "test": transforms.Compose(
             [
-                transforms.Resize((256, 256)),
+                transforms.Resize((224, 224)),
                 transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=[0.7485, 0.7274, 0.7051], std=[0.2481, 0.2566, 0.2747]
-                ),
+                transforms.Normalize(mean=BATCH_NORM_MEAN, std=BATCH_NORM_STD),
             ]
         ),
     }
@@ -125,7 +128,7 @@ def main() -> None:
         split="train",
     )
     train_loader = DataLoader(
-        dataset=train_dataset, shuffle=True, batch_size=64, drop_last=True
+        dataset=train_dataset, shuffle=True, batch_size=BATCH_SIZE, drop_last=True
     )
 
     validation_dataset = ImageLoader(
@@ -134,7 +137,7 @@ def main() -> None:
         split="validation",
     )
     validation_loader = DataLoader(
-        dataset=validation_dataset, shuffle=False, batch_size=64
+        dataset=validation_dataset, shuffle=False, batch_size=BATCH_SIZE
     )
 
     logger.info(
@@ -151,13 +154,13 @@ def main() -> None:
     model.fc = nn.Linear(num_features, 30)
     model = model.to(device)
     loss_function = nn.CrossEntropyLoss()
-    optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
 
     trained_model = training_loop(
         model=model,
         loss_func=loss_function,
         optimizer=optimizer,
-        epochs=20,
+        epochs=EPOCHS,
         dataloader=train_loader,
         device=device,
     )
@@ -169,7 +172,7 @@ def main() -> None:
         loss_func=loss_function,
     )
 
-    torch.save(trained_model.state_dict(), "./saved_models/01_7_24_resnet_model.pth")
+    torch.save(trained_model.state_dict(), "./saved_models/02_7_24_resnet_model.pth")
 
 
 if __name__ == "__main__":

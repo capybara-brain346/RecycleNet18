@@ -1,6 +1,7 @@
 import os
 import polars as pl
 from PIL import Image
+import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 from config import Config
@@ -38,7 +39,7 @@ DATA_TRANSFORMS = {
 
 
 class ImageLoader(Dataset):
-    def __init__(self, path: str, data_transform: transforms, split: str):
+    def __init__(self, path: str, split: str = None, data_transform: transforms = None):
         super().__init__()
         self.path = path
         img_files = glob.glob(self.path + "/*")
@@ -82,7 +83,9 @@ class ImageLoader(Dataset):
 
         # self.df.write_json("data_snapshot.json", row_oriented=True)
 
-        self.transform = data_transform
+        self.transform = (
+            data_transform if data_transform is not None else transforms.ToTensor()
+        )
 
         # print(f"Class mappings -> {self.class_map}")
         # print(f"Image size -> {self.img_size}")

@@ -10,7 +10,7 @@ class ImageNormalization:
         self.mean, self.std, self.nb_samples = 0.0, 0.0, 0.0
 
     def normalize(self):
-        for data in self.loader:
+        for data, _ in self.loader:
             data = data[0]
             batch_samples = data.size(0)
             data = data.view(batch_samples, data.size(1), -1)
