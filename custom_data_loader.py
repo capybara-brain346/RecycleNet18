@@ -7,36 +7,6 @@ from torch.utils.data import DataLoader, Dataset
 from config import Config
 import glob
 
-DATA_TRANSFORMS = {
-    "train": transforms.Compose(
-        [
-            transforms.Resize((256, 256)),
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.7485, 0.7274, 0.7051], std=[0.2481, 0.2566, 0.2747]
-            ),
-        ]
-    ),
-    "validation": transforms.Compose(
-        [
-            transforms.Resize((256, 256)),
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.7485, 0.7274, 0.7051], std=[0.2481, 0.2566, 0.2747]
-            ),
-        ]
-    ),
-    "test": transforms.Compose(
-        [
-            transforms.Resize((256, 256)),
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.7485, 0.7274, 0.7051], std=[0.2481, 0.2566, 0.2747]
-            ),
-        ]
-    ),
-}
-
 
 class ImageLoader(Dataset):
     def __init__(self, path: str, split: str = None, data_transform: transforms = None):

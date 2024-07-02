@@ -1,14 +1,16 @@
 import torch
 import torch.nn as nn
 from torchvision import transforms
+from torchvision.transforms import InterpolationMode
 from torchvision.models import resnet18, ResNet18_Weights
 from torch.utils.data import DataLoader
 from custom_data_loader import ImageLoader
+from typing import OrderedDict
 from config import Config
 import logging
 import datetime
 import tqdm
-# from torchsummary import summary
+from torchsummary import summary
 
 logging.getLogger("PIL").setLevel(logging.WARNING)
 logging.basicConfig(
@@ -87,15 +89,15 @@ def main() -> None:
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on GPU..." if torch.cuda.is_available() else "Running on CPU...")
 
-    BATCH_SIZE: int = 32
-    EPOCHS: int = 10
+    BATCH_SIZE: int = 64
+    EPOCHS: int = 20
     LEARNING_RATE: float = 0.001
     BATCH_NORM_MEAN: list[float] = [0.485, 0.456, 0.406]
     BATCH_NORM_STD: list[float] = [0.229, 0.224, 0.225]
     DATA_TRANSFORMS: dict = {
         "train": transforms.Compose(
             [
-                transforms.Resize((224, 224)),
+                transforms.Resize((224, 224), interpolation=InterpolationMode.BILINEAR),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=BATCH_NORM_MEAN,
@@ -151,7 +153,16 @@ def main() -> None:
         param.requires_grad = False
 
     num_features = model.fc.in_features
-    model.fc = nn.Linear(num_features, 30)
+    model.fc = nn.Sequential(
+        OrderedDict(
+            [
+                ("fc1", nn.Linear(num_features, 256)),
+                ("relu1", nn.ReLU()),
+                ("fc2", nn.Linear(256, 30)),
+            ]
+        )
+    )
+    # print(model)
     model = model.to(device)
     loss_function = nn.CrossEntropyLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
@@ -172,7 +183,7 @@ def main() -> None:
         loss_func=loss_function,
     )
 
-    torch.save(trained_model.state_dict(), "./saved_models/02_7_24_resnet_model.pth")
+    torch.save(trained_model.state_dict(), "./saved_models/02_7_24_resnet_model_3.pth")
 
 
 if __name__ == "__main__":

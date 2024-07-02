@@ -112,3 +112,94 @@ INFO:__main__:Starting validation...
 INFO:__main__:Validation accuracy: 74.91 %
 INFO:__main__:Validation loss: 0.8501
 INFO:__main__:Validation completed!
+INFO:__main__:Started training run at 2024-07-02 09:37:16.459376
+INFO:__main__:Loading images...
+INFO:__main__:Loaded 9000 training images and 4500 validation images
+INFO:__main__:Loaded ResNet18 with DEFAULT weights
+INFO:__main__:Starting training loop...
+INFO:__main__:Epoch: 0 Loss: 1.9200743069118924 Accuracy: 0.5111111111111112
+INFO:__main__:Epoch: 5 Loss: 0.6573377706739637 Accuracy: 0.8023333333333333
+INFO:__main__:Epoch: 10 Loss: 0.5093287641737196 Accuracy: 0.8452222222222222
+INFO:__main__:Epoch: 15 Loss: 0.44514728599124487 Accuracy: 0.8607777777777779
+INFO:__main__:Training loop completed!
+INFO:__main__:Starting validation...
+INFO:__main__:Validation accuracy: 76.91 %
+INFO:__main__:Validation loss: 0.7934
+INFO:__main__:Validation completed!
+INFO:__main__:Started training run at 2024-07-02 10:09:46.996489
+INFO:__main__:Loading images...
+INFO:__main__:Loaded 9000 training images and 4500 validation images
+INFO:__main__:Loaded ResNet18 with DEFAULT weights
+INFO:__main__:Starting training loop...
+INFO:__main__:Epoch: 0 Loss: 2.2580578503078885 Accuracy: 0.4236666666666667
+INFO:__main__:Epoch: 5 Loss: 0.9906269671122233 Accuracy: 0.7036666666666667
+INFO:__main__:Epoch: 10 Loss: 0.8562154341803657 Accuracy: 0.741
+INFO:__main__:Epoch: 15 Loss: 0.7917136323716906 Accuracy: 0.7547777777777778
+INFO:__main__:Training loop completed!
+INFO:__main__:Starting validation...
+INFO:__main__:Validation accuracy: 71.02 %
+INFO:__main__:Validation loss: 0.9470
+INFO:__main__:Validation completed!
+INFO:__main__:Started training run at 2024-07-02 10:36:44.656088
+INFO:__main__:Loading images...
+INFO:__main__:Loaded 9000 training images and 4500 validation images
+INFO:__main__:Loaded ResNet18 with DEFAULT weights
+INFO:__main__:Starting training loop...
+INFO:__main__:Epoch: 0 Loss: 2.293294409857856 Accuracy: 0.4038888888888889
+INFO:__main__:Epoch: 5 Loss: 0.989804327223036 Accuracy: 0.7107777777777778
+INFO:__main__:Epoch: 10 Loss: 0.87191216829088 Accuracy: 0.7337777777777779
+INFO:__main__:Epoch: 15 Loss: 0.8054934768676758 Accuracy: 0.7496666666666667
+INFO:__main__:Training loop completed!
+INFO:__main__:Starting validation...
+INFO:__main__:Validation accuracy: 70.09 %
+INFO:__main__:Validation loss: 0.9997
+INFO:__main__:Validation completed!
+INFO:__main__:Started training run at 2024-07-02 10:56:46.311503
+INFO:__main__:Loading images...
+INFO:__main__:Loaded 9000 training images and 4500 validation images
+INFO:__main__:Loaded ResNet18 with DEFAULT weights
+INFO:__main__:Started training run at 2024-07-02 10:57:34.276587
+INFO:__main__:Loading images...
+INFO:__main__:Loaded 9000 training images and 4500 validation images
+INFO:__main__:Loaded ResNet18 with DEFAULT weights
+INFO:__main__:Started training run at 2024-07-02 10:57:50.702471
+INFO:__main__:Loading images...
+INFO:__main__:Loaded 9000 training images and 4500 validation images
+INFO:__main__:Loaded ResNet18 with DEFAULT weights
+INFO:__main__:Started training run at 2024-07-02 10:58:01.273342
+INFO:__main__:Loading images...
+INFO:__main__:Loaded 9000 training images and 4500 validation images
+INFO:__main__:Loaded ResNet18 with DEFAULT weights
+INFO:__main__:Started training run at 2024-07-02 10:59:28.711595
+INFO:__main__:Loading images...
+INFO:__main__:Loaded 9000 training images and 4500 validation images
+INFO:__main__:Loaded ResNet18 with DEFAULT weights
+INFO:__main__:Starting training loop...
+INFO:__main__:Epoch: 0 Loss: 1.9988174879286025 Accuracy: 0.45611111111111113
+INFO:__main__:Epoch: 5 Loss: 0.9092385018666586 Accuracy: 0.7108888888888889
+INFO:__main__:Training loop completed!
+INFO:__main__:Starting validation...
+INFO:__main__:Validation accuracy: 70.04 %
+INFO:__main__:Validation loss: 0.9830
+INFO:__main__:Validation completed!
+INFO:__main__:Started training run at 2024-07-02 11:15:02.526483
+INFO:__main__:Loading images...
+INFO:__main__:Loaded 9000 training images and 4500 validation images
+INFO:__main__:Loaded ResNet18 with DEFAULT weights
+INFO:__main__:Starting training loop...
+INFO:__main__:Epoch: 0 Loss: 1.6614182646009656 Accuracy: 0.5585555555555556
+INFO:__main__:Epoch: 5 Loss: 0.5600323734283448 Accuracy: 0.8163333333333334
+INFO:__main__:Started training run at 2024-07-02 11:20:49.275459
+INFO:__main__:Loading images...
+INFO:__main__:Loaded 9000 training images and 4500 validation images
+INFO:__main__:Loaded ResNet18 with DEFAULT weights
+INFO:__main__:Starting training loop...
+INFO:__main__:Epoch: 0 Loss: 1.6368013254801432 Accuracy: 0.5534444444444445
+INFO:__main__:Epoch: 5 Loss: 0.5466009245978461 Accuracy: 0.8184444444444445
+INFO:__main__:Epoch: 10 Loss: 0.37005913787417943 Accuracy: 0.8726666666666667
+INFO:__main__:Epoch: 15 Loss: 0.2651797138320075 Accuracy: 0.9066666666666667
+INFO:__main__:Training loop completed!
+INFO:__main__:Starting validation...
+INFO:__main__:Validation accuracy: 78.53 %
+INFO:__main__:Validation loss: 0.8571
+INFO:__main__:Validation completed!
