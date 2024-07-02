@@ -10,7 +10,7 @@ from config import Config
 import logging
 import datetime
 import tqdm
-from torchsummary import summary
+# from torchsummary import summary
 
 logging.getLogger("PIL").setLevel(logging.WARNING)
 logging.basicConfig(
@@ -22,7 +22,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def training_loop(model, loss_func, optimizer, epochs, dataloader, device):
+def training_loop(
+    model, loss_func, optimizer, epochs, dataloader, device, logger=logger
+):
     logger.info("Starting training loop...")
     model.train()
     for epoch in range(epochs):
@@ -55,7 +57,7 @@ def training_loop(model, loss_func, optimizer, epochs, dataloader, device):
     return model
 
 
-def validate(model, dataset, device, loss_func):
+def validate(model, dataset, device, loss_func, logger=logger):
     logger.info("Starting validation...")
     model.eval()
     correct = 0
