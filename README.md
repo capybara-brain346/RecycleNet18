@@ -62,3 +62,7 @@ RecycleNet is a deep learning-based project designed to classify images of recyc
 - **Localization**: Provide region-specific recycling guidelines and regulations.
 - **Improved Chatbot Interaction**: Enhance the chatbot’s capabilities to offer more personalized and detailed assistance.
 
+## How to run locally
+
+- Coming soon...
+
