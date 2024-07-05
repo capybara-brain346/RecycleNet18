@@ -1,0 +1,14 @@
+marshmallow==3.21.3
+matplotlib==3.9.0
+numpy==1.26.4
+pandas==2.2.2
+pillow==10.3.0
+polars==0.20.31
+pydantic==2.7.4
+streamlit==1.36.0
+torch==2.3.1
+torchaudio==2.3.1
+torchsummary==1.5.1
+torchvision==0.18.1+cu121
+tqdm==4.66.4
+wheel==0.43.0

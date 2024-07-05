@@ -11,7 +11,7 @@ from io import BytesIO
 import streamlit as st
 
 
-def get_classification(image_bytes):
+def get_classification(image_bytes: bytes) -> tuple[int, float] | None:
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on GPU..." if torch.cuda.is_available() else "Running on CPU...")
 
@@ -52,7 +52,7 @@ def get_classification(image_bytes):
     return class_idx, logits_to_probablities[class_idx].item()
 
 
-def chat_response(object):
+def chat_response(object: str) -> None:
     st.subheader(
         "Hi 👋🏼, I am here to help you with you're questions on sustainability ♻️"
     )
@@ -128,4 +128,4 @@ if uploaded_image is not None:
     predicted_class, class_probability = get_classification(bytes_data)
     predicted_class = class_map[predicted_class]
     st.subheader(f"Predicted class: {predicted_class.upper()}")
-    chat_response(predicted_class)
+    # chat_response(predicted_class)
