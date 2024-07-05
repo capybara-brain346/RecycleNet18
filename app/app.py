@@ -35,7 +35,7 @@ def get_classification(image_bytes: bytes) -> tuple[int, float] | None:
             ]
         )
     )
-    RecycleNet.load_state_dict(torch.load("./saved_models/RecycleNet18.pth"))
+    RecycleNet.load_state_dict(torch.load("./RecycleNet18.pth"))
     RecycleNet.to(device)
     RecycleNet.eval()
 
