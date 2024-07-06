@@ -131,6 +131,7 @@ env.bak/
 venv.bak/
 data/
 saved_models/
+app.py
 
 # Spyder project settings
 .spyderproject
