@@ -5,6 +5,20 @@ from pydantic import BaseModel
 
 
 class Validator(BaseModel):
+    """
+    Validate and log information about the dataset.
+
+    Attributes:
+        path (str): The directory path containing the dataset classes.
+
+    Methods:
+        log_classes:
+            Log and return a DataFrame containing the class names in the dataset.
+
+        log_image_count:
+            Log and return a DataFrame containing the class names and their respective image counts.
+    """
+
     path: str
 
     def log_classes(self):

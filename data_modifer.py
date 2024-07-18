@@ -4,6 +4,20 @@ from pydantic import BaseModel
 
 
 class Modifier(BaseModel):
+    """
+    Modify and log changes to images in the dataset.
+
+    Attributes:
+        path (str): The directory path containing the dataset classes.
+
+    Methods:
+        rename_img:
+            Rename images in each class directory and log the changes to a specified log file.
+
+    Args:
+        log_file: The file to which renaming logs will be written.
+    """
+
     path: str
 
     def rename_img(self, log_file):

@@ -12,6 +12,17 @@ import streamlit as st
 
 
 def get_classification(image_bytes: bytes) -> tuple[int, float] | None:
+    """
+    Classify an image and return the class index and confidence score.
+
+    Args:
+        image_bytes (bytes): The image data in bytes format.
+
+    Returns:
+        tuple[int, float] | None: A tuple containing the class index and confidence score,
+        or None if classification fails.
+    """
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on GPU..." if torch.cuda.is_available() else "Running on CPU...")
 
@@ -53,6 +64,16 @@ def get_classification(image_bytes: bytes) -> tuple[int, float] | None:
 
 
 def chat_response(object: str) -> None:
+    """
+    Generate and display a chat response regarding the sustainability and recyclability of an object.
+
+    Args:
+        object (str): The object to inquire about its recyclability.
+
+    Returns:
+        None
+    """
+
     st.subheader(
         "Hi 👋🏼, I am here to help you with you're questions on sustainability ♻️"
     )

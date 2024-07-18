@@ -9,6 +9,22 @@ import glob
 
 
 class ImageLoader(Dataset):
+    """
+    A custom Dataset class for loading and transforming images.
+
+    Attributes:
+        path (str): The directory path containing the dataset.
+        split (str): The dataset split to use ('train', 'validation', or 'test'). Default is None.
+        data_transform (transforms): The transformations to apply to the images. Default is None.
+
+    Methods:
+        __getitem__:
+            Retrieve an image and its corresponding class index by index.
+
+        __len__:
+            Return the number of samples in the dataset.
+    """
+
     def __init__(self, path: str, split: str = None, data_transform: transforms = None):
         super().__init__()
         self.path = path

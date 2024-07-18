@@ -25,6 +25,22 @@ logger = logging.getLogger(__name__)
 def training_loop(
     model, loss_func, optimizer, epochs, dataloader, device, logger=logger
 ):
+    """
+    Execute the training loop for a given model.
+
+    Args:
+        model: The model object to be trained.
+        loss_func: The loss function used to compute the model's loss.
+        optimizer: The optimizer used to update the model's weights.
+        epochs (int): The number of epochs to train the model.
+        dataloader: The DataLoader providing the training data.
+        device: The device on which to perform training (e.g., 'cuda' or 'cpu').
+        logger: The logger object for logging training progress.
+
+    Returns:
+        The trained model.
+    """
+
     logger.info("Starting training loop...")
     model.train()
     for epoch in range(epochs):
@@ -58,6 +74,20 @@ def training_loop(
 
 
 def validate(model, dataset, device, loss_func, logger=logger):
+    """
+    Validate the model on validation dataset.
+
+    Args:
+        model: The neural network model to be validated.
+        dataset: The dataset to use for validation.
+        device: The device on which to perform validation (e.g., 'cuda' or 'cpu').
+        loss_func: The loss function used to compute the model's loss.
+        logger: The logger object for logging validation results.
+
+    Returns:
+        None
+    """
+
     logger.info("Starting validation...")
     model.eval()
     correct = 0

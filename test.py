@@ -1,3 +1,13 @@
+"""
+Run the main function to perform model evaluation on the test dataset.
+
+Args:
+    None
+
+Returns:
+    None
+"""
+
 import torch
 import torch.nn as nn
 from torchvision import transforms

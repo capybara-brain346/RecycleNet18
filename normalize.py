@@ -4,6 +4,20 @@ from config import Config
 
 
 class ImageNormalization:
+    """
+    Compute the mean and standard deviation for image normalization.
+
+    Attributes:
+        dataset: The dataset to be normalized.
+
+    Methods:
+        normalize:
+            Calculate and return the mean and standard deviation of the dataset.
+
+    Returns:
+        tuple: A tuple containing the mean and standard deviation of the dataset.
+    """
+
     def __init__(self, dataset):
         self.dataset = dataset
         self.loader = DataLoader(self.dataset, batch_size=64, shuffle=False)
