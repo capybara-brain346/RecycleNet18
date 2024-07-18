@@ -1,8 +1,7 @@
-numpy==1.26.4
-pandas==2.2.2
-pillow==10.3.0
-pydantic==2.7.4
-torch==2.3.1
-torchvision==0.18.1
-wheel==0.43.0
+numpy
+pandas
+pillow
+pydantic
+torch
+torchvision
 Flask

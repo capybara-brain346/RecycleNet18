@@ -1,50 +1,17 @@
-from flask import Flask, render_template, request
 import torch
+import torch.nn as nn
 from torchvision import transforms
 from torchvision.models import resnet18, ResNet18_Weights
-import torch.nn as nn
+from typing import OrderedDict
+from langchain_community.chat_models import ChatOllama
+from langchain.prompts import ChatPromptTemplate
+from langchain.schema import StrOutputParser
 from PIL import Image
-from typing import OrderedDict, Annotated
-
-app = Flask(__name__)
-
-CLASS_MAP = {
-    0: "aerosol cans",
-    1: "aluminum food cans",
-    2: "aluminum soda cans",
-    3: "cardboard boxes",
-    4: "cardboard packaging",
-    5: "clothing",
-    6: "coffee grounds",
-    7: "disposable plastic cutlery",
-    8: "eggshells",
-    9: "food waste",
-    10: "glass beverage bottles",
-    11: "glass cosmetic containers",
-    12: "glass food jars",
-    13: "magazines",
-    14: "newspaper",
-    15: "office paper",
-    16: "paper cups",
-    17: "plastic cup lids",
-    18: "plastic detergent bottles",
-    19: "plastic food containers",
-    20: "plastic shopping bags",
-    21: "plastic soda bottles",
-    22: "plastic straws",
-    23: "plastic trash bags",
-    24: "plastic water bottles",
-    25: "shoes",
-    26: "steel food cans",
-    27: "styrofoam cups",
-    28: "styrofoam food containers",
-    29: "tea bags",
-}
+from io import BytesIO
+import streamlit as st
 
 
-def get_classification(
-    image_bytes,
-) -> Annotated[tuple[int, float], "Range 0 to 29"] | None:
+def get_classification(image_bytes: bytes) -> tuple[int, float] | None:
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on GPU..." if torch.cuda.is_available() else "Running on CPU...")
 
@@ -68,11 +35,12 @@ def get_classification(
             ]
         )
     )
-    RecycleNet.load_state_dict(torch.load("./app/RecycleNet18.pth"))
+    RecycleNet.load_state_dict(torch.load("./RecycleNet18.pth"))
     RecycleNet.to(device)
     RecycleNet.eval()
 
-    image = Image.open(image_bytes).convert("RGB")
+    image = Image.open(BytesIO(image_bytes)).convert("RGB")
+    st.image(image)
     input_tensor = transform(image).unsqueeze(0)
     input_tensor = input_tensor.to(device)
 
@@ -84,19 +52,82 @@ def get_classification(
     return class_idx, logits_to_probablities[class_idx].item()
 
 
-@app.get("/")
-def home():
-    return render_template("index.html")
+def chat_response(object: str) -> None:
+    st.subheader(
+        "Hi 👋🏼, I am here to help you with you're questions on sustainability ♻️"
+    )
+    st.divider()
+
+    model = ChatOllama(model="llama2")
+
+    # output_schema = {
+    #     "title": "Recyclable object",
+    #     "description": "Identify information about the recyclability of the object.",
+    #     "properties": "A step-by-step guide to recycle the object in sustainable way.",
+    # }
+
+    template = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "You are a highly knowledgeable ecologist with extensive expertise in sustainability and recycling practices.",
+            ),
+            (
+                "human",
+                """
+                Provide an explanation on how to recycle or reuse {object}. 
+                Include detailed information about the recyclability of {object} and provide a step-by-step guide on how to recycle {object} in the most sustainable way.
+                """,
+            ),
+        ]
+    )
+
+    run = template | model | StrOutputParser()
+    response = run.stream({"object": object})
+    st.write(response)
 
 
-@app.post("/upload/")
-def upload_image():
-    if "file" not in request.files:
-        return "File not found"
+st.title("RecycleNet 18 Demo ⚒️")
+uploaded_image = st.file_uploader("Choose a file")
 
-    predicted_class, class_confidence = get_classification(request.files["file"])
-    return render_template("index.html", result=CLASS_MAP[predicted_class].title())
+if uploaded_image is not None:
+    bytes_data = uploaded_image.read()
 
+    class_map = {
+        0: "aerosol cans",
+        1: "aluminum food_cans",
+        2: "aluminum soda cans",
+        3: "cardboard boxes",
+        4: "cardboard packaging",
+        5: "clothing",
+        6: "coffee grounds",
+        7: "disposable plastic cutlery",
+        8: "eggshells",
+        9: "food waste",
+        10: "glass beverage bottles",
+        11: "glass cosmetic containers",
+        12: "glass food jars",
+        13: "magazines",
+        14: "newspaper",
+        15: "office paper",
+        16: "paper cups",
+        17: "plastic cup lids",
+        18: "plastic detergent bottles",
+        19: "plastic food containers",
+        20: "plastic shopping bags",
+        21: "plastic soda bottles",
+        22: "plastic straws",
+        23: "plastic trash bags",
+        24: "plastic water bottles",
+        25: "shoes",
+        26: "steel food cans",
+        27: "styrofoam cups",
+        28: "styrofoam food containers",
+        29: "tea bags",
+    }
 
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    predicted_class, class_probability = get_classification(bytes_data)
+    predicted_class = class_map[predicted_class]
+    st.subheader(f"Predicted class: {predicted_class.title()}")
+    st.divider()
+    chat_response(predicted_class)
