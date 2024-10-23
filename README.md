@@ -1,7 +1,5 @@
 <h1 align="center" id="title">RecycleNet18</h1>
 
-<p align="center"><img src="https://socialify.git.ci/capybara-brain346/RecycleNet18/image?description=1&font=Source%20Code%20Pro&language=1&name=1&owner=1&pattern=Charlie%20Brown&theme=Dark" alt="project-image"></p>
-
 # RecycleNet: Recyclable Items Classification and Chatbot Guide
 
 ## Overview
@@ -12,37 +10,26 @@ RecycleNet is a deep learning-based project designed to classify images of recyc
 
 ### Image Classification
 
-- **30 Classes of Recyclable Items**: The model is trained to recognize a variety of common recyclable materials, including:
-  - Aerosol Cans
-  - Aluminum Food Cans
-  - Aluminum Soda Cans
-  - Cardboard Boxes
-  - Cardboard Packaging
-  - Clothing
-  - Coffee Grounds
-  - Disposable Plastic Cutlery
-  - Eggshells
-  - Food Waste
-  - Glass Beverage Bottles
-  - Glass Cosmetic Containers
-  - Glass Food Jars
-  - Magazines
-  - Newspaper
-  - Office Paper
-  - Paper Cups
-  - Plastic Cup Lids
-  - Plastic Detergent Bottles
-  - Plastic Food Containers
-  - Plastic Shopping Bags
-  - Plastic Soda Bottles
-  - Plastic Straws
-  - Plastic Trash Bags
-  - Plastic Water Bottles
-  - Shoes
-  - Steel Food Cans
-  - Styrofoam Cups
-  - Styrofoam Food Containers
-  - Tea Bags
+**30 Classes of Recyclable Items**: The model is trained to recognize a variety of common recyclable materials, including:
+
+| **Recyclable Items**            | **Recyclable Items**            |
+|----------------------------------|---------------------------------|
+| Aerosol Cans                     | Plastic Detergent Bottles       |
+| Aluminum Food Cans               | Plastic Food Containers         |
+| Aluminum Soda Cans               | Plastic Shopping Bags           |
+| Cardboard Boxes                  | Plastic Soda Bottles            |
+| Cardboard Packaging              | Plastic Straws                 |
+| Clothing                         | Plastic Trash Bags             |
+| Coffee Grounds                   | Plastic Water Bottles          |
+| Disposable Plastic Cutlery        | Shoes                          |
+| Eggshells                        | Steel Food Cans                |
+| Food Waste                       | Styrofoam Cups                 |
+| Glass Beverage Bottles           | Styrofoam Food Containers       |
+| Glass Cosmetic Containers        | Tea Bags                       |
+| Glass Food Jars                  | Magazines                      |
+| Newspaper                        | Office Paper                   |
+| Paper Cups                       | Plastic Cup Lids               |
+
 
 ### Chatbot Guide
 
@@ -62,7 +49,78 @@ RecycleNet is a deep learning-based project designed to classify images of recyc
 - **Localization**: Provide region-specific recycling guidelines and regulations.
 - **Improved Chatbot Interaction**: Enhance the chatbot’s capabilities to offer more personalized and detailed assistance.
 
-## How to run locally
+## Setup Instructions
 
-- Coming soon...
+Follow these steps to set up the project locally on your machine.
+
+### Prerequisites
+
+Ensure you have the following installed:
+- >=Python 3.10
+- `pip` (Python package manager)
+- `anaconda` environment manager 
+- `git`
+
+### Clone the Repository
+
+1. Open your terminal and run the following command to clone the repository:
+
+   ```bash
+   git clone https://github.com/capybara-brain346/RecycleNet18.git
+   ```
+2. cd into directory
+   ```bash
+   cd RecycleNet18
+   ```
+3. Setup virtual environment
+   ```bash
+   conda create -p venv python=3.10 -y
+   ```
+   For windows
+   ```bash
+   conda activate venv/
+   ```
+   For UNIX system
+   ```bash
+   source venv/
+   ```
+
+   Install requirements
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Installing Ollama
+
+Ollama is a tool that allows you to run large language models locally. Follow the steps below to install it.
+
+### Step 1: Download Ollama
+
+You can download the latest version of Ollama from the official website:
+
+- [Download Ollama](https://ollama.com/download)
+
+### Step 2: Install Ollama by running .exe file
+
+### Step 3: Verify Installation
+
+After installation, open Terminal and verify Ollama is installed by running the following command:
+
+```bash
+ollama run llama3.2:3b
+```
+
+### Train the model
+```bash
+python train.py
+```
+
+### Run the app
+```bash
+streamlit run app/main.py
+```
+
+
+
+
 
