@@ -131,7 +131,7 @@ env.bak/
 venv.bak/
 data/
 saved_models/
-
+.vscode/
 # Spyder project settings
 .spyderproject
 .spyproject

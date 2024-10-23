@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def training_loop(
-    model, loss_func, optimizer, epochs, dataloader, device, logger=logger
+    model, loss_func, optimizer, epochs, dataloader, device, logger_object=logger
 ):
     """
     Execute the training loop for a given model.
@@ -41,7 +41,7 @@ def training_loop(
         The trained model.
     """
 
-    logger.info("Starting training loop...")
+    logger_object.info("Starting training loop...")
     model.train()
     for epoch in range(epochs):
         print(f"Epoch {epoch}/{epochs - 1}")
@@ -65,15 +65,17 @@ def training_loop(
         epoch_acc = running_correct.double() / len(dataloader.dataset)
 
         if epoch % 5 == 0:
-            logger.info(f"Epoch: {epoch} Loss: {epoch_loss} Accuracy: {epoch_acc}")
+            logger_object.info(
+                f"Epoch: {epoch} Loss: {epoch_loss} Accuracy: {epoch_acc}"
+            )
 
         print(f"Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}")
 
-    logger.info("Training loop completed!")
+    logger_object.info("Training loop completed!")
     return model
 
 
-def validate(model, dataset, device, loss_func, logger=logger):
+def validate(model, dataset, device, loss_func, logger_object=logger):
     """
     Validate the model on validation dataset.
 
@@ -88,7 +90,7 @@ def validate(model, dataset, device, loss_func, logger=logger):
         None
     """
 
-    logger.info("Starting validation...")
+    logger_object.info("Starting validation...")
     model.eval()
     correct = 0
     total = 0
@@ -110,9 +112,9 @@ def validate(model, dataset, device, loss_func, logger=logger):
     accuracy = 100 * correct / total
     average_loss = running_loss / total
 
-    logger.info(f"Validation accuracy: {accuracy:.2f} %")
-    logger.info(f"Validation loss: {average_loss:.4f}")
-    logger.info("Validation completed!")
+    logger_object.info(f"Validation accuracy: {accuracy:.2f} %")
+    logger_object.info(f"Validation loss: {average_loss:.4f}")
+    logger_object.info("Validation completed!")
     print(f"Validation accuracy: {accuracy:.2f} %")
     print(f"Validation loss: {average_loss:.4f}")
 

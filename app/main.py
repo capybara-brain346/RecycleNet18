@@ -1,13 +1,13 @@
+from typing import OrderedDict
+from io import BytesIO
 import torch
-import torch.nn as nn
+from torch import nn
 from torchvision import transforms
 from torchvision.models import resnet18, ResNet18_Weights
-from typing import OrderedDict
 from langchain_community.chat_models import ChatOllama
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import StrOutputParser
 from PIL import Image
-from io import BytesIO
 import streamlit as st
 
 
@@ -26,18 +26,21 @@ def get_classification(image_bytes: bytes) -> tuple[int, float] | None:
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on GPU..." if torch.cuda.is_available() else "Running on CPU...")
 
-    BATCH_NORM_MEAN: list[float] = [0.485, 0.456, 0.406]
-    BATCH_NORM_STD: list[float] = [0.229, 0.224, 0.225]
+    batch_norm_mean: list[float] = [0.485, 0.456, 0.406]
+    batch_norm_std: list[float] = [0.229, 0.224, 0.225]
     transform = transforms.Compose(
         [
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
-            transforms.Normalize(mean=BATCH_NORM_MEAN, std=BATCH_NORM_STD),
+            transforms.Normalize(mean=batch_norm_mean, std=batch_norm_std),
         ]
     )
-    RecycleNet = resnet18(weights=ResNet18_Weights.DEFAULT).to(device)
-    num_features = RecycleNet.fc.in_features
-    RecycleNet.fc = nn.Sequential(
+
+    recycle_net = resnet18(weights=ResNet18_Weights.DEFAULT)
+    recycle_net = recycle_net.to(device)
+
+    num_features = recycle_net.fc.in_features
+    recycle_net.fc = nn.Sequential(
         OrderedDict(
             [
                 ("fc1", nn.Linear(num_features, 256)),
@@ -46,9 +49,9 @@ def get_classification(image_bytes: bytes) -> tuple[int, float] | None:
             ]
         )
     )
-    RecycleNet.load_state_dict(torch.load("./RecycleNet18.pth"))
-    RecycleNet.to(device)
-    RecycleNet.eval()
+    recycle_net.load_state_dict(torch.load(r"app\RecycleNet18.pth"))
+    recycle_net.to(device)
+    recycle_net.eval()
 
     image = Image.open(BytesIO(image_bytes)).convert("RGB")
     st.image(image)
@@ -56,16 +59,17 @@ def get_classification(image_bytes: bytes) -> tuple[int, float] | None:
     input_tensor = input_tensor.to(device)
 
     with torch.no_grad():
-        output = RecycleNet(input_tensor)
+        output = recycle_net(input_tensor)
 
     logits_to_probablities = torch.nn.functional.softmax(output[0], dim=0)
     class_idx = torch.argmax(logits_to_probablities).item()
     return class_idx, logits_to_probablities[class_idx].item()
 
 
-def chat_response(object: str) -> None:
+def chat_response(class_name: str) -> None:
     """
-    Generate and display a chat response regarding the sustainability and recyclability of an object.
+    Generate and display a chat response regarding the
+    sustainability and recyclability of an object.
 
     Args:
         object (str): The object to inquire about its recyclability.
@@ -79,7 +83,7 @@ def chat_response(object: str) -> None:
     )
     st.divider()
 
-    model = ChatOllama(model="llama2")
+    model = ChatOllama(model="llama3.2:3b")
 
     # output_schema = {
     #     "title": "Recyclable object",
@@ -91,20 +95,24 @@ def chat_response(object: str) -> None:
         [
             (
                 "system",
-                "You are a highly knowledgeable ecologist with extensive expertise in sustainability and recycling practices.",
+                """You are a highly knowledgeable ecologist with 
+                extensive expertise in sustainability and recycling practices.
+                """,
             ),
             (
                 "human",
                 """
-                Provide an explanation on how to recycle or reuse {object}. 
-                Include detailed information about the recyclability of {object} and provide a step-by-step guide on how to recycle {object} in the most sustainable way.
+                Provide an explanation on how to recycle or reuse {class_name}. 
+                Include detailed information about the recyclability of {class_name} 
+                and provide a step-by-step guide on how to recycle {class_name} 
+                in the most sustainable way.
                 """,
             ),
         ]
     )
 
     run = template | model | StrOutputParser()
-    response = run.stream({"object": object})
+    response = run.stream({"class_name": class_name})
     st.write(response)
 
 
