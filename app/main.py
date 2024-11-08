@@ -4,11 +4,14 @@ import torch
 from torch import nn
 from torchvision import transforms
 from torchvision.models import resnet18, ResNet18_Weights
-from langchain_community.chat_models import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import StrOutputParser
 from PIL import Image
 import streamlit as st
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def get_classification(image_bytes: bytes) -> tuple[int, float] | None:
@@ -23,8 +26,7 @@ def get_classification(image_bytes: bytes) -> tuple[int, float] | None:
         or None if classification fails.
     """
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print("Running on GPU..." if torch.cuda.is_available() else "Running on CPU...")
+    device = torch.device("cpu")
 
     batch_norm_mean: list[float] = [0.485, 0.456, 0.406]
     batch_norm_std: list[float] = [0.229, 0.224, 0.225]
@@ -49,7 +51,7 @@ def get_classification(image_bytes: bytes) -> tuple[int, float] | None:
             ]
         )
     )
-    recycle_net.load_state_dict(torch.load(r"app\RecycleNet18.pth"))
+    recycle_net.load_state_dict(torch.load("app/RecycleNet18.pth", map_location=device))
     recycle_net.to(device)
     recycle_net.eval()
 
@@ -83,7 +85,7 @@ def chat_response(class_name: str) -> None:
     )
     st.divider()
 
-    model = ChatOllama(model="llama3.2:3b")
+    model = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
 
     # output_schema = {
     #     "title": "Recyclable object",

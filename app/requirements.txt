@@ -1,7 +1,0 @@
-numpy
-pandas
-pillow
-pydantic
-torch
-torchvision
-Flask
