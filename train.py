@@ -126,31 +126,41 @@ def main() -> None:
     BATCH_SIZE: int = 64
     EPOCHS: int = 20
     LEARNING_RATE: float = 0.001
-    BATCH_NORM_MEAN: list[float] = [0.485, 0.456, 0.406]
-    BATCH_NORM_STD: list[float] = [0.229, 0.224, 0.225]
+    # BATCH_NORM_MEAN: list[float] = [0.485, 0.456, 0.406]
+    # BATCH_NORM_STD: list[float] = [0.229, 0.224, 0.225]
+
     DATA_TRANSFORMS: dict = {
         "train": transforms.Compose(
             [
-                transforms.Resize((224, 224), interpolation=InterpolationMode.BILINEAR),
+                transforms.Resize(256, interpolation=InterpolationMode.BILINEAR),
+                transforms.CenterCrop(224),
                 transforms.ToTensor(),
                 transforms.Normalize(
-                    mean=BATCH_NORM_MEAN,
-                    std=BATCH_NORM_STD,
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225],
                 ),
             ]
         ),
         "validation": transforms.Compose(
             [
-                transforms.Resize((224, 224)),
+                transforms.Resize(256, interpolation=InterpolationMode.BILINEAR),
+                transforms.CenterCrop(224),
                 transforms.ToTensor(),
-                transforms.Normalize(mean=BATCH_NORM_MEAN, std=BATCH_NORM_STD),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225],
+                ),
             ]
         ),
         "test": transforms.Compose(
             [
-                transforms.Resize((224, 224)),
+                transforms.Resize(256, interpolation=InterpolationMode.BILINEAR),
+                transforms.CenterCrop(224),
                 transforms.ToTensor(),
-                transforms.Normalize(mean=BATCH_NORM_MEAN, std=BATCH_NORM_STD),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225],
+                ),
             ]
         ),
     }
@@ -190,12 +200,26 @@ def main() -> None:
     model.fc = nn.Sequential(
         OrderedDict(
             [
-                ("fc1", nn.Linear(num_features, 256)),
+                ("fc1", nn.Linear(num_features, 512)),
                 ("relu1", nn.ReLU()),
-                ("fc2", nn.Linear(256, 30)),
+                ("bn1", nn.BatchNorm1d(512)),
+                # ("dropout1", nn.Dropout(0.3)),
+                ("fc2", nn.Linear(512, 256)),
+                ("relu2", nn.ReLU()),
+                ("bn2", nn.BatchNorm1d(256)),
+                # ("dropout2", nn.Dropout(0.3)),
+                ("fc3", nn.Linear(256, 128)),
+                ("relu3", nn.ReLU()),
+                ("bn3", nn.BatchNorm1d(128)),
+                # ("dropout3", nn.Dropout(0.2)),
+                ("fc4", nn.Linear(128, 64)),
+                ("relu4", nn.ReLU()),
+                ("bn4", nn.BatchNorm1d(64)),
+                ("fc5", nn.Linear(64, 30)),
             ]
         )
     )
+
     # print(model)
     model = model.to(device)
     loss_function = nn.CrossEntropyLoss()
@@ -217,7 +241,7 @@ def main() -> None:
         loss_func=loss_function,
     )
 
-    torch.save(trained_model.state_dict(), "./saved_models/02_7_24_resnet_model_3.pth")
+    torch.save(trained_model.state_dict(), "./saved_models/18_11_2024_2.pth")
 
 
 if __name__ == "__main__":
