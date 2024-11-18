@@ -114,7 +114,7 @@ def health_check(response: Response):
         return {"Endpoint", "Working"}
     except Exception as e:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return {"404": "Something Went Wrong: {e}"}
+        return {"404": f"Something Went Wrong: {e}"}
 
 
 @app.post("/upload")
