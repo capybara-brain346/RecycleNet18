@@ -1,16 +1,17 @@
+import json
 from fastapi import FastAPI, File, UploadFile, Response, status, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
 from enum import Enum
-import datetime
+from datetime import datetime
 from uuid import uuid4
-import inference_utils
+from .inference_utils import classify
 
-app = FastAPI()
+app = FastAPI(debug=True)
 
 
 def generate_request_id() -> str:
-    return f"pred_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid4().hex[:8]}"
+    return f"pred_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid4().hex[:8]}"
 
 
 class PredictionStatus(str, Enum):
@@ -31,7 +32,7 @@ class MetaData(BaseModel):
     filename: str = Field(..., description="Original filename")
     file_size: int = Field(..., description="File size in bytes")
     mime_type: str = Field(..., description="File MIME type")
-    processed_at: datetime = Field(default_factory=datetime.utcnow)
+    processed_at: datetime = Field(default_factory=datetime.now)
 
 
 class PredictionResponse(BaseModel):
@@ -40,6 +41,30 @@ class PredictionResponse(BaseModel):
     prediction: Optional[PredictionDetail] = None
     metadata: MetaData
     request_id: str = Field(..., description="Unique request identifier")
+
+
+def generate_response(
+    predicted_class: str,
+    probability: float,
+    predicted_class_index: Optional[int],
+    file,
+):
+    response = PredictionResponse(
+        status=PredictionStatus.SUCCESS,
+        message="Image processed successfully",
+        prediction=PredictionDetail(
+            class_name=predicted_class,
+            confidence=probability,
+            class_index=predicted_class_index,
+        ),
+        metadata=MetaData(
+            filename=file.filename,
+            file_size=file.size,
+            mime_type=file.content_type,
+        ),
+        request_id=generate_request_id(),
+    )
+    return response.model_dump_json()
 
 
 @app.get("/health")
@@ -56,29 +81,29 @@ def health_check(response: Response):
 async def upload_image(response: Response, file: UploadFile = File(...)):
     try:
         contents = await file.read()
-        prepredicted_class_index, predicted_class, probablility = (
-            inference_utils.classify(image_bytes=contents)
+        predicted_class_index, predicted_class, probability = classify(
+            image_bytes=contents
         )
 
         response.status_code = status.HTTP_200_OK
 
-        return {
-            PredictionResponse(
-                status=PredictionStatus.SUCCESS,
-                message="Image processed successfully",
-                prediction=PredictionDetail(
-                    class_name=predicted_class,
-                    confidence=probablility,
-                    class_index=prepredicted_class_index,
-                ),
-                metadata=MetaData(
-                    filename=file.filename,
-                    file_size=file.size,
-                    mime_type=file.content_type,
-                ),
-                request_id=generate_request_id(),
-            )
-        }
+        response_body = PredictionResponse(
+            status=PredictionStatus.SUCCESS,
+            message="Image processed successfully",
+            prediction=PredictionDetail(
+                class_name=predicted_class,
+                confidence=probability,
+                class_index=predicted_class_index,
+            ),
+            metadata=MetaData(
+                filename=file.filename,
+                file_size=file.size,
+                mime_type=file.content_type,
+            ),
+            request_id=generate_request_id(),
+        )
+
+        return response_body.model_dump()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -87,7 +112,7 @@ async def upload_image(response: Response, file: UploadFile = File(...)):
                 "message": str(e),
                 "metadata": {
                     "filename": file.filename,
-                    "processed_at": datetime.utcnow(),
+                    "processed_at": datetime.now().strftime("%Y%m%d_%H%M%S"),
                 },
                 "request_id": generate_request_id(),
             },
