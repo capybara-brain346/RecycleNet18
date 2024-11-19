@@ -1,117 +1,52 @@
-from urllib import response
-from fastapi import FastAPI, File, UploadFile, Response, status
-from typing import OrderedDict
-from io import BytesIO
-import torch
-from torchvision.transforms import InterpolationMode
-from torch import nn
-from torchvision import transforms
-from torchvision.models import resnet18, ResNet18_Weights
-from PIL import Image
-
+from fastapi import FastAPI, File, UploadFile, Response, status, HTTPException
+from pydantic import BaseModel, Field
+from typing import Optional
+from enum import Enum
+import datetime
+from uuid import uuid4
+import inference_utils
 
 app = FastAPI()
 
-class_map = {
-    0: "aerosol cans",
-    1: "aluminum food_cans",
-    2: "aluminum soda cans",
-    3: "cardboard boxes",
-    4: "cardboard packaging",
-    5: "clothing",
-    6: "coffee grounds",
-    7: "disposable plastic cutlery",
-    8: "eggshells",
-    9: "food waste",
-    10: "glass beverage bottles",
-    11: "glass cosmetic containers",
-    12: "glass food jars",
-    13: "magazines",
-    14: "newspaper",
-    15: "office paper",
-    16: "paper cups",
-    17: "plastic cup lids",
-    18: "plastic detergent bottles",
-    19: "plastic food containers",
-    20: "plastic shopping bags",
-    21: "plastic soda bottles",
-    22: "plastic straws",
-    23: "plastic trash bags",
-    24: "plastic water bottles",
-    25: "shoes",
-    26: "steel food cans",
-    27: "styrofoam cups",
-    28: "styrofoam food containers",
-    29: "tea bags",
-}
+
+def generate_request_id() -> str:
+    return f"pred_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid4().hex[:8]}"
 
 
-def classify(image_bytes: bytes) -> tuple[int, float] | None:
-    device = torch.device("cuda")
+class PredictionStatus(str, Enum):
+    SUCCESS = "success"
+    FAILED = "failed"
+    PROCESSING = "processing"
 
-    transform = transforms.Compose(
-        [
-            transforms.Resize(256, interpolation=InterpolationMode.BILINEAR),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225],
-            ),
-        ]
+
+class PredictionDetail(BaseModel):
+    class_name: str = Field(..., description="Predicted class name")
+    confidence: float = Field(
+        ..., ge=0, le=1, description="Confidence score between 0 and 1"
     )
-
-    recycle_net = resnet18(weights=ResNet18_Weights.DEFAULT)
-    recycle_net = recycle_net.to(device)
-
-    num_features = recycle_net.fc.in_features
-    recycle_net.fc = nn.Sequential(
-        OrderedDict(
-            [
-                ("fc1", nn.Linear(num_features, 512)),
-                ("relu1", nn.ReLU()),
-                ("bn1", nn.BatchNorm1d(512)),
-                ("fc2", nn.Linear(512, 256)),
-                ("relu2", nn.ReLU()),
-                ("bn2", nn.BatchNorm1d(256)),
-                ("fc3", nn.Linear(256, 128)),
-                ("relu3", nn.ReLU()),
-                ("bn3", nn.BatchNorm1d(128)),
-                ("fc4", nn.Linear(128, 64)),
-                ("relu4", nn.ReLU()),
-                ("bn4", nn.BatchNorm1d(64)),
-                ("fc5", nn.Linear(64, 30)),
-            ]
-        )
-    )
-
-    recycle_net.load_state_dict(torch.load("recyclenet18_model.pth"))
-    recycle_net.to(device)
-    recycle_net.eval()
-
-    image = Image.open(BytesIO(image_bytes)).convert("RGB")
-    input_tensor = transform(image).unsqueeze(0)
-    input_tensor = input_tensor.to(device)
-
-    with torch.no_grad():
-        output = recycle_net(input_tensor)
-
-    logits_to_probablities = torch.nn.functional.softmax(output[0], dim=0)
-    class_idx = torch.argmax(logits_to_probablities).item()
-    return class_map[class_idx], logits_to_probablities[class_idx].item()
+    class_index: Optional[int] = Field(None, description="Index of the predicted class")
 
 
-@app.get("/home")
-def home(response: Response):
-    response.status_code = status.HTTP_200_OK
-    return {"Welcome To RecycleNet18"}
+class MetaData(BaseModel):
+    filename: str = Field(..., description="Original filename")
+    file_size: int = Field(..., description="File size in bytes")
+    mime_type: str = Field(..., description="File MIME type")
+    processed_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class PredictionResponse(BaseModel):
+    status: PredictionStatus = Field(..., description="Processing status")
+    message: str = Field(..., description="Human-readable status message")
+    prediction: Optional[PredictionDetail] = None
+    metadata: MetaData
+    request_id: str = Field(..., description="Unique request identifier")
 
 
 @app.get("/health")
 def health_check(response: Response):
     try:
         response.status_code = status.HTTP_200_OK
-        return {"Endpoint", "Working"}
+        return {"status": "Healthy"}
     except Exception as e:
         response.status_code = status.HTTP_404_NOT_FOUND
         return {"404": f"Something Went Wrong: {e}"}
@@ -121,16 +56,39 @@ def health_check(response: Response):
 async def upload_image(response: Response, file: UploadFile = File(...)):
     try:
         contents = await file.read()
-        predicted_class, probablility = classify(image_bytes=contents)
+        prepredicted_class_index, predicted_class, probablility = (
+            inference_utils.classify(image_bytes=contents)
+        )
 
         response.status_code = status.HTTP_200_OK
 
         return {
-            "filename": file.filename,
-            "status": "processed successfully",
-            "class": predicted_class,
-            "confidence": probablility,
-            "status code": response.status_code,
+            PredictionResponse(
+                status=PredictionStatus.SUCCESS,
+                message="Image processed successfully",
+                prediction=PredictionDetail(
+                    class_name=predicted_class,
+                    confidence=probablility,
+                    class_index=prepredicted_class_index,
+                ),
+                metadata=MetaData(
+                    filename=file.filename,
+                    file_size=file.size,
+                    mime_type=file.content_type,
+                ),
+                request_id=generate_request_id(),
+            )
         }
     except Exception as e:
-        return {"error": e}
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "status": PredictionStatus.FAILED,
+                "message": str(e),
+                "metadata": {
+                    "filename": file.filename,
+                    "processed_at": datetime.utcnow(),
+                },
+                "request_id": generate_request_id(),
+            },
+        )
