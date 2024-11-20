@@ -1,4 +1,3 @@
-import json
 from fastapi import FastAPI, File, UploadFile, Response, status, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -9,7 +8,7 @@ from .inference_utils import classify
 
 app = FastAPI(debug=True)
 
-
+# generates a unique request id using timestamp and uuid
 def generate_request_id() -> str:
     return f"pred_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid4().hex[:8]}"
 
@@ -43,6 +42,7 @@ class PredictionResponse(BaseModel):
     request_id: str = Field(..., description="Unique request identifier")
 
 
+# generates a standardized json response containing prediction results and metadata
 def generate_response(
     predicted_class: str,
     probability: float,
@@ -67,6 +67,7 @@ def generate_response(
     return response.model_dump_json()
 
 
+# health check endpoint to verify api status
 @app.get("/health")
 def health_check(response: Response):
     try:
@@ -77,6 +78,8 @@ def health_check(response: Response):
         return {"404": f"Something Went Wrong: {e}"}
 
 
+# main endpoint for image upload and classification
+# accepts image file, returns prediction results with metadata
 @app.post("/upload")
 async def upload_image(response: Response, file: UploadFile = File(...)):
     try:
@@ -84,9 +87,7 @@ async def upload_image(response: Response, file: UploadFile = File(...)):
         predicted_class_index, predicted_class, probability = classify(
             image_bytes=contents
         )
-
         response.status_code = status.HTTP_200_OK
-
         response_body = PredictionResponse(
             status=PredictionStatus.SUCCESS,
             message="Image processed successfully",
@@ -102,7 +103,6 @@ async def upload_image(response: Response, file: UploadFile = File(...)):
             ),
             request_id=generate_request_id(),
         )
-
         return response_body.model_dump()
     except Exception as e:
         raise HTTPException(
