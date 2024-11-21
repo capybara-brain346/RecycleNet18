@@ -105,7 +105,11 @@ def classify(image_bytes: bytes) -> tuple[int, str, float] | None:
 
     # load weights
     recycle_net.load_state_dict(
-        torch.load("app/recyclenet18_model.pth"), map_location=torch.device("cpu")
+        torch.load(
+            "app/recyclenet18_model.pth",
+            map_location=torch.device("cpu"),
+            weights_only=True,
+        )
     )
     recycle_net.to(device)
     recycle_net.eval()
