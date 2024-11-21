@@ -10,4 +10,4 @@ COPY ./app /app/app
 
 EXPOSE 8080
 
-CMD ["fastapi","run","main.py","--port","8080"]
+CMD ["fastapi","run","app/main.py","--port","8080"]
