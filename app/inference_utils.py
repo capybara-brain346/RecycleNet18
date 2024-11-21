@@ -66,7 +66,7 @@ def classify(image_bytes: bytes) -> tuple[int, str, float] | None:
             transforms.CenterCrop(
                 224
             ),  # crop center to 224x224 (standard resnet input size)
-            transforms.ToTensor(),  
+            transforms.ToTensor(),
             transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],  # imagenet normalization values
                 std=[0.229, 0.224, 0.225],
@@ -88,7 +88,7 @@ def classify(image_bytes: bytes) -> tuple[int, str, float] | None:
                 (
                     "bn1",
                     nn.BatchNorm1d(512),
-                ),  
+                ),
                 ("fc2", nn.Linear(512, 256)),
                 ("relu2", nn.ReLU()),
                 ("bn2", nn.BatchNorm1d(256)),
@@ -98,26 +98,28 @@ def classify(image_bytes: bytes) -> tuple[int, str, float] | None:
                 ("fc4", nn.Linear(128, 64)),
                 ("relu4", nn.ReLU()),
                 ("bn4", nn.BatchNorm1d(64)),
-                ("fc5", nn.Linear(64, 30)),  
+                ("fc5", nn.Linear(64, 30)),
             ]
         )
     )
 
     # load weights
-    recycle_net.load_state_dict(torch.load("app/recyclenet18_model.pth"))
+    recycle_net.load_state_dict(
+        torch.load("app/recyclenet18_model.pth"), map_location=torch.device("cpu")
+    )
     recycle_net.to(device)
-    recycle_net.eval()  
+    recycle_net.eval()
 
     # preprocess image
     image = Image.open(BytesIO(image_bytes)).convert("RGB")
-    input_tensor = transform(image).unsqueeze(0)  
+    input_tensor = transform(image).unsqueeze(0)
     input_tensor = input_tensor.to(device)
 
     # perform inference
-    with torch.no_grad():  
+    with torch.no_grad():
         output = recycle_net(input_tensor)
 
-    # convert logits to probabilities 
+    # convert logits to probabilities
     logits_to_probablities = torch.nn.functional.softmax(output[0], dim=0)
 
     # get index of predicted value
