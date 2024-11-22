@@ -131,6 +131,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+recyclelm/
 data/
 saved_models/
 .vscode/
