@@ -2,7 +2,7 @@ import os
 from typing import List, Dict
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from peft import PeftModel, PeftConfig
+from peft import PeftModel
 
 
 def chat(prompt: str, chat_history: List[Dict[str, str]]) -> str:
@@ -20,7 +20,7 @@ def chat(prompt: str, chat_history: List[Dict[str, str]]) -> str:
         token=os.getenv("HUGGINGFACE_ACCESS_TOKEN"),
     )
 
-    peft_config = PeftConfig.from_pretrained("./recyclelm")
+    # peft_config = PeftConfig.from_pretrained("./recyclelm")
 
     model = PeftModel.from_pretrained(base_model, "./recyclelm")
 
@@ -29,7 +29,7 @@ def chat(prompt: str, chat_history: List[Dict[str, str]]) -> str:
     )
     tokenizer.pad_token = tokenizer.eos_token
 
-    def generate_text(prompt, max_length=700):
+    def generate_text(prompt: str, max_length: int = 700) -> str:
         input_ids = tokenizer.encode(prompt, return_tensors="pt").to(model.device)
 
         with torch.no_grad():
