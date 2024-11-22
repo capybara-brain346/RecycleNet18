@@ -46,14 +46,13 @@ def chat(prompt: str, chat_history: List[Dict[str, str]]) -> str:
         return generated_text
 
     prompt_enhanced = """
-    You are RecycleBot, an expert assistant dedicated to helping users recycle items effectively. You understand the rules and best practices for recycling in various regions and provide clear, actionable advice. Always offer tips that are environmentally friendly and practical. If you're unsure, suggest consulting local recycling guidelines.
-
+    Carefully analyze the provided chat history and the user's latest message. Generate clear, concise, and contextually appropriate responses based on the chat context. Avoid fabricating details or introducing unrelated information, and ensure your guidance aligns with effective recycling practices.
 
     Chat History: {chat_history}
 
     User's Message: {user_message}
 
-    Your Response:
+    RecycleBot:
     """
     result = generate_text(
         prompt_enhanced.format(chat_history=chat_history, user_message=prompt)

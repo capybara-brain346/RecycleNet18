@@ -40,7 +40,9 @@ with right_column:
     st.header("Chat with the LLM")
 
     chat_history: List[Dict[str, str]] = [
-        {"System": llm.prompts.system_prompt.format(infered_recyclable_item_class_name)}
+        {
+            "System": "You are RecycleBot, an expert assistant dedicated to helping users recycle items effectively. You understand the rules and best practices for recycling in various regions and provide clear, actionable advice. Always offer tips that are environmentally friendly and practical. If you're unsure, suggest consulting local recycling guidelines."
+        }
     ]
 
     user_input = st.text_input("Your message:", key="chat_input")
@@ -49,7 +51,8 @@ with right_column:
         if user_input:
             chat_history.append({"user": user_input})
             response = llm.inference.chat(user_input, chat_history=chat_history)
-            print(response)
+            response = response.split("RecycleBot:")[-1].strip()
+            # print(response)
             chat_history.append({"bot": response})
 
     for chat in chat_history:
