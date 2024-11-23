@@ -8,6 +8,7 @@ from .inference_utils import classify
 
 app = FastAPI(debug=True)
 
+
 # generates a unique request id using timestamp and uuid
 def generate_request_id() -> str:
     return f"pred_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid4().hex[:8]}"
@@ -68,7 +69,7 @@ def generate_response(
 
 
 # health check endpoint to verify api status
-@app.get("/health")
+@app.get("/")
 def health_check(response: Response):
     try:
         response.status_code = status.HTTP_200_OK
