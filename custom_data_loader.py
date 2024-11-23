@@ -25,7 +25,9 @@ class ImageLoader(Dataset):
             Return the number of samples in the dataset.
     """
 
-    def __init__(self, path: str, split: str = None, data_transform: transforms = None):
+    def __init__(
+        self, path: str, split: str = None, data_transform: transforms = None
+    ) -> None:
         super().__init__()
         self.path = path
         img_files = glob.glob(self.path + "/*")
@@ -76,13 +78,13 @@ class ImageLoader(Dataset):
         # print(f"Class mappings -> {self.class_map}")
         # print(f"Image size -> {self.img_size}")
 
-    def __getitem__(self, idx: int):
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, int]:
         image_path, label, label_idx = self.df.row(idx)
         image = Image.open(image_path).convert("RGB")
         image = self.transform(image)
         return image, label_idx
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.df)
 
 
