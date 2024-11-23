@@ -1,126 +1,110 @@
-<h1 align="center" id="title">RecycleNet18</h1>
-<h2 align="center">Demo: https://youtu.be/4B3xWNA1GKI</h2> <br>
-<h1>RecycleNet: Recyclable Items Classification and Chatbot Guide</h1>
+# RecycleNet: Recyclable Items Classification and Chatbot Guide  
 
-## Overview
+## Demo: [Watch on YouTube](https://youtu.be/4B3xWNA1GKI)  
 
-RecycleNet is a deep learning-based project designed to classify images of recyclable items into 30 distinct categories. Alongside the classification model, a chatbot is integrated to assist users in understanding how to recycle the identified items properly. The goal is to promote effective recycling practices and reduce environmental waste.
+---
 
-## Features
+## Overview  
+RecycleNet is a deep learning-based solution for promoting effective recycling practices. The project combines an image classification model, capable of categorizing recyclable items into 30 distinct classes, with an interactive chatbot that guides users on proper recycling methods.  
 
-### Image Classification
+## Features  
 
-**30 Classes of Recyclable Items**: The model is trained to recognize a variety of common recyclable materials, including:
+### **Image Classification**  
+RecycleNet identifies items as one of 30 recyclable categories, including:  
 
-| **Recyclable Items**            | **Recyclable Items**            |
-|----------------------------------|---------------------------------|
-| Aerosol Cans                     | Plastic Detergent Bottles       |
-| Aluminum Food Cans               | Plastic Food Containers         |
-| Aluminum Soda Cans               | Plastic Shopping Bags           |
-| Cardboard Boxes                  | Plastic Soda Bottles            |
-| Cardboard Packaging              | Plastic Straws                 |
-| Clothing                         | Plastic Trash Bags             |
-| Coffee Grounds                   | Plastic Water Bottles          |
-| Disposable Plastic Cutlery        | Shoes                          |
-| Eggshells                        | Steel Food Cans                |
-| Food Waste                       | Styrofoam Cups                 |
-| Glass Beverage Bottles           | Styrofoam Food Containers       |
-| Glass Cosmetic Containers        | Tea Bags                       |
-| Glass Food Jars                  | Magazines                      |
-| Newspaper                        | Office Paper                   |
-| Paper Cups                       | Plastic Cup Lids               |
+| **Recyclable Items**         | **Recyclable Items**            |  
+|-------------------------------|---------------------------------|  
+| Aerosol Cans                 | Plastic Detergent Bottles       |  
+| Aluminum Food Cans           | Plastic Food Containers         |  
+| Aluminum Soda Cans           | Plastic Shopping Bags           |  
+| Cardboard Boxes              | Plastic Soda Bottles            |  
+| Cardboard Packaging          | Plastic Straws                 |  
+| Clothing                     | Plastic Trash Bags              |  
+| Coffee Grounds               | Plastic Water Bottles           |  
+| Disposable Plastic Cutlery   | Shoes                           |  
+| Eggshells                    | Steel Food Cans                 |  
+| Food Waste                   | Styrofoam Cups                  |  
+| Glass Beverage Bottles       | Styrofoam Food Containers       |  
+| Glass Cosmetic Containers    | Tea Bags                        |  
+| Glass Food Jars              | Magazines                       |  
+| Newspaper                    | Office Paper                    |  
+| Paper Cups                   | Plastic Cup Lids                |  
 
+---
 
-### Chatbot Guide
+### **Chatbot Guide**  
+- **Interactive Assistance**: Provides clear instructions on how to recycle items.  
+- **Educational Content**: Shares best practices and explains the recycling process for different materials.  
+- **User-Friendly Interface**: Ensures accessibility with intuitive interaction.  
 
-- **Interactive Assistance**: The integrated chatbot provides guidance on how to properly recycle the items identified by the classification model.
-- **Educational Content**: Learn about different types of recyclable materials and best practices for recycling.
-- **User-Friendly Interface**: The chatbot is designed to be intuitive and easy to interact with, making recycling information accessible to everyone.
+---
 
-## Usage
+## Usage  
 
-1. **Upload an Image**: Users can upload an image of an item they want to recycle.
-2. **Classification**: The model processes the image and classifies it into one of the 30 recyclable categories.
-3. **Recycling Guidance**: The chatbot provides detailed information on how to recycle the identified item, including any special instructions or local recycling regulations.
+1. **Upload an Image**: Upload an image of the item you wish to recycle.  
+2. **Get Classification**: The system identifies the item category and provides a confidence score.  
+3. **Receive Guidance**: The chatbot delivers step-by-step instructions for recycling, including any region-specific considerations.  
 
-## Future Enhancements
+---
 
-- **Expand Classification Categories**: Include more types of recyclable items to cover a broader range of materials.
-- **Localization**: Provide region-specific recycling guidelines and regulations.
-- **Improved Chatbot Interaction**: Enhance the chatbot’s capabilities to offer more personalized and detailed assistance.
+## Technical Details  
 
-## Setup Instructions
+### **Model Training**  
+- The classification model is based on **ResNet18** and fine-tuned on a dataset of recyclable items.  
+- It achieves high accuracy with normalized ImageNet weights and a custom prediction head.  
 
-Follow these steps to set up the project locally on your machine.
+### **Inference**  
+The `classify()` function:  
+- Takes image bytes as input.  
+- Processes the image using transformations (resize, crop, normalize).  
+- Returns the predicted class, its index, and confidence score.  
 
-### Prerequisites
+### **Chatbot**  
+- Built using **Google's GEMMA-1.1-2b** and fine-tuned with LoRA for better context understanding in recycling-related queries.  
+- Supports interactive chat sessions to deliver detailed recycling instructions.  
 
-Ensure you have the following installed:
-- >=Python 3.10
-- `pip` (Python package manager)
-- `anaconda` environment manager 
-- `git`
+### **API**  
+Developed using **FastAPI** to provide endpoints for:  
+- **Health Check**: Verify API availability (`/health`).  
+- **Upload Endpoint**: Upload an image and receive classification details along with metadata (`/upload`).  
 
-### Clone the Repository
+### **Tech Stack**  
+- **Backend**: FastAPI  
+- **Modeling**: PyTorch, HuggingFace Transformers  
+- **Preprocessing**: torchvision  
+- **Deployment**: Docker-ready for easy scaling  
 
-1. Open your terminal and run the following command to clone the repository:
+---
 
-   ```bash
-   git clone https://github.com/capybara-brain346/RecycleNet18.git
-   ```
-2. cd into directory
-   ```bash
-   cd RecycleNet18
-   ```
-3. Setup virtual environment
-   ```bash
-   conda create -p venv python=3.10 -y
-   ```
-   For windows
-   ```bash
-   conda activate venv/
-   ```
-   For UNIX system
-   ```bash
-   source venv/
-   ```
+## Installation  
 
-   Install requirements
-   ```bash
-   pip install -r requirements.txt
-   ```
+1. **Clone Repository**  
+   ```bash  
+   git clone https://github.com/yourusername/recyclenet.git  
+   cd recyclenet  
+   ```  
 
-### Installing Ollama
+2. **Install Dependencies**  
+   ```bash  
+   pip install -r requirements.txt  
+   ```  
 
-Ollama is a tool that allows you to run large language models locally. Follow the steps below to install it.
+3. **Run Locally**  
+   ```bash  
+   uvicorn app.main:app --reload  
+   ```  
 
-### Step 1: Download Ollama
+4. **Access API**  
+   Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) for interactive API documentation.  
 
-You can download the latest version of Ollama from the official website:
+---
 
-- [Download Ollama](https://ollama.com/download)
+## Future Enhancements  
+- **Expand Classification Categories**: Incorporate more recyclable materials.  
+- **Localization**: Support region-specific recycling rules.  
+- **Advanced Chatbot Features**: Improve interaction for more personalized guidance.  
 
-### Step 2: Install Ollama by running .exe file
+---
 
-### Step 3: Verify Installation
-
-After installation, open Terminal and verify Ollama is installed by running the following command:
-
-```bash
-ollama run llama3.2:3b
-```
-
-### Train the model
-```bash
-python train.py
-```
-
-### Run the app
-```bash
-streamlit run app/main.py
-```
-
-
-
-
-
+## License  
+This project is licensed under the [MIT License](LICENSE).  
