@@ -108,3 +108,8 @@ Developed using **FastAPI** to provide endpoints for:
 
 ## License  
 This project is licensed under the [MIT License](LICENSE).  
+
+![image](https://github.com/user-attachments/assets/e773799f-f44d-4362-8695-acc4e7229eda)
+![image](https://github.com/user-attachments/assets/25fdbe08-193f-4074-b312-e2d4652236d7)
+![image](https://github.com/user-attachments/assets/8e1adcc9-fa9d-4a57-a459-0e9d7227d5d6)
+
