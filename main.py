@@ -42,12 +42,12 @@ with left_column:
 
 
 with right_column:
-    st.header("Chat with the LLM")
+    st.header("Chat with the RecycleBot")
 
     # store history of chats
     chat_history: List[Dict[str, str]] = [
         {
-            "System": "You are RecycleBot, an expert assistant dedicated to helping users recycle items effectively. You provide clear, actionable advice on recycling and suggest best practices aligned with environmental standards. If the user’s query is unclear or incomplete, expand on it with educated guesses and offer helpful suggestions. Always recommend consulting local recycling guidelines when in doubt."
+            "System": "You are RecycleBot, an expert assistant dedicated to helping users recycle items effectively. You provide clear, actionable advice on recycling and suggest best practices aligned with environmental standards. If the user’s query is unclear or incomplete, expand on it with educated guesses and offer helpful suggestions. Always recommend consulting local recycling guidelines when in doubt. Answer in minimum 200 words when asked a proper question."
         }
     ]
 
