@@ -73,10 +73,11 @@ The platform provides an intuitive upload, training, deployment, and inference w
 
 - [ ] A Django endpoint `/predict/` is provided.
 - [ ] On POST (image upload), the endpoint:
-  - Looks up the "production" model with best mAP from DynamoDB.
-  - If not cached, downloads and loads the model from SageMaker endpoint.
-  - Runs inference using SageMaker endpoint and returns bounding box predictions as JSON.
-- [ ] On promotion of a new model, the endpoint automatically updates the SageMaker deployment.
+  - Looks up the "production" model with best mAP from DynamoDB
+  - Retrieves model artifact from S3 using stored s3_path
+  - Creates/updates SageMaker endpoint deployment with the model
+  - Runs inference using SageMaker endpoint and returns bounding box predictions as JSON
+- [ ] On promotion of a new model, the endpoint automatically triggers a new SageMaker deployment
 
 ### 5.6 VLM Assistant
 
@@ -117,7 +118,7 @@ The platform provides an intuitive upload, training, deployment, and inference w
 
 ### Data Lifecycle
 
-- Images—> upload to S3 —> SageMaker training job (fetch from S3) —> `.pt` model to S3—> ModelMeta (metrics, logs) to DynamoDB —> SageMaker endpoint uses best model for inference.
+- Images—> upload to S3 —> SageMaker training job (fetch from S3) —> `.pt` model to S3—> ModelMeta (metrics, logs) to DynamoDB —> Model retrieved from S3 and deployed to SageMaker endpoint —> Inference
 - VLM Assistant runs on EC2, serviced via UI endpoint.
 
 ---
