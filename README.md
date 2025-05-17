@@ -1,115 +1,135 @@
-# RecycleNet: Recyclable Items Classification and Chatbot Guide  
+# RecycleNet: Recyclable Items Classification and Chatbot Guide
 
-## Demo: [Watch on YouTube](https://www.youtube.com/watch?v=K3wz3cSf9is)  
-
----
-
-## Overview  
-RecycleNet is a deep learning-based solution for promoting effective recycling practices. The project combines an image classification model, capable of categorizing recyclable items into 30 distinct classes, with an interactive chatbot that guides users on proper recycling methods.  
-
-## Features  
-
-### **Image Classification**  
-RecycleNet identifies items as one of 30 recyclable categories, including:  
-
-| **Recyclable Items**         | **Recyclable Items**            |  
-|-------------------------------|---------------------------------|  
-| Aerosol Cans                 | Plastic Detergent Bottles       |  
-| Aluminum Food Cans           | Plastic Food Containers         |  
-| Aluminum Soda Cans           | Plastic Shopping Bags           |  
-| Cardboard Boxes              | Plastic Soda Bottles            |  
-| Cardboard Packaging          | Plastic Straws                 |  
-| Clothing                     | Plastic Trash Bags              |  
-| Coffee Grounds               | Plastic Water Bottles           |  
-| Disposable Plastic Cutlery   | Shoes                           |  
-| Eggshells                    | Steel Food Cans                 |  
-| Food Waste                   | Styrofoam Cups                  |  
-| Glass Beverage Bottles       | Styrofoam Food Containers       |  
-| Glass Cosmetic Containers    | Tea Bags                        |  
-| Glass Food Jars              | Magazines                       |  
-| Newspaper                    | Office Paper                    |  
-| Paper Cups                   | Plastic Cup Lids                |  
+## Demo: [Watch on YouTube](https://www.youtube.com/watch?v=K3wz3cSf9is)
 
 ---
 
-### **Chatbot Guide**  
-- **Interactive Assistance**: Provides clear instructions on how to recycle items.  
-- **Educational Content**: Shares best practices and explains the recycling process for different materials.  
-- **User-Friendly Interface**: Ensures accessibility with intuitive interaction.  
+## Overview
 
----
+RecycleNet is a cloud-based, end-to-end object detection platform for classifying recyclable materials in user-supplied images and answering recycling questions using a Vision-Language Model assistant. The platform provides an intuitive upload, training, deployment, and inference workflow, paired with detailed model metrics, logs, and best-model selection—fully orchestrated from Django and relying on AWS S3 and DynamoDB as persistent stores.
 
-## Usage  
+## Features
 
-1. **Upload an Image**: Upload an image of the item you wish to recycle.  
-2. **Get Classification**: The system identifies the item category and provides a confidence score.  
-3. **Receive Guidance**: The chatbot delivers step-by-step instructions for recycling, including any region-specific considerations.  
+### Object Detection & Classification
 
----
+- Upload single or bulk image datasets via Django web interface
+- YOLOv8-based model training on AWS SageMaker using ml.g5.2xlarge instances
+- Comprehensive model metrics tracking including mAP, accuracy, precision, recall, and F1-score
+- Automatic model selection and deployment based on best performance
+- Real-time inference via SageMaker endpoints
 
-## Technical Details  
+### VLM-Powered Recycling Assistant
 
-### **Model Training**  
-- The classification model is based on **ResNet18** and fine-tuned on a dataset of recyclable items.  
-- It achieves high accuracy with normalized ImageNet weights and a custom prediction head.  
+- Interactive Q&A interface for recycling guidance
+- Support for both image and text-based queries
+- Knowledge-grounded responses using recycling documentation
+- Educational content and best practices sharing
 
-### **Inference**  
-The `classify()` function:  
-- Takes image bytes as input.  
-- Processes the image using transformations (resize, crop, normalize).  
-- Returns the predicted class, its index, and confidence score.  
+### Admin Dashboard
 
-### **Chatbot**  
-- Built using **Google's GEMMA-1.1-2b** and fine-tuned with LoRA for better context understanding in recycling-related queries.  
-- Supports interactive chat sessions to deliver detailed recycling instructions.  
+- Dataset management and organization
+- Model training orchestration and monitoring
+- Performance metrics visualization
+- Model promotion and deployment controls
 
-### **API**  
-Developed using **FastAPI** to provide endpoints for:  
-- **Health Check**: Verify API availability (`/health`).  
-- **Upload Endpoint**: Upload an image and receive classification details along with metadata (`/upload`).  
+## System Architecture
 
-### **Tech Stack**  
-- **Backend**: FastAPI  
-- **Modeling**: PyTorch, HuggingFace Transformers  
-- **Preprocessing**: torchvision  
-- **Deployment**: Docker-ready for easy scaling  
+```plaintext
+[Users/Admins]
+   │
+   ▼
+[Django Web/Admin (EC2)]
+   │    • Dataset upload
+   │    • Model training & orchestration
+   │    • Model/metrics dashboard
+   │    • Inference API
+   │    • VLM Q&A assistant
+   │
+   ├───────────────┬─────────────────┬───────────────┬───────────────┐
+   ▼               ▼                 ▼               ▼               ▼
+[S3: images] [S3: models/logs] [DynamoDB: ModelMeta] [Local VLM API] [SageMaker]
+```
 
----
+## Technical Details
 
-## Installation  
+### Model Training
 
-1. **Clone Repository**  
-   ```bash  
-   git clone https://github.com/yourusername/recyclenet.git  
-   cd recyclenet  
-   ```  
+- YOLOv8 object detection model trained on AWS SageMaker
+- GPU-accelerated training using ml.g5.2xlarge instances
+- Automated metrics logging and model artifact storage
+- Best model selection based on mAP performance
 
-2. **Install Dependencies**  
-   ```bash  
-   pip install -r requirements.txt  
-   ```  
+### Infrastructure
 
-3. **Run Locally**  
-   ```bash  
-   uvicorn app.main:app --reload  
-   ```  
+- **Storage**: AWS S3 for datasets, model artifacts, and logs
+- **Database**: DynamoDB for model metadata and metrics
+- **Compute**: AWS SageMaker for training and inference
+- **Web Interface**: Django-based admin dashboard and API
+- **VLM Assistant**: Local deployment of vision-language model
 
-4. **Access API**  
-   Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) for interactive API documentation.  
+### API Endpoints
 
----
+- `/predict/`: Object detection inference endpoint
+- `/assistant/`: VLM-based recycling Q&A endpoint
+- Secure authentication required for all endpoints
 
-## Future Enhancements  
-- **Expand Classification Categories**: Incorporate more recyclable materials.  
-- **Localization**: Support region-specific recycling rules.  
-- **Advanced Chatbot Features**: Improve interaction for more personalized guidance.  
+## Installation & Setup
 
----
+1. **Configure AWS Credentials**
 
-## License  
-This project is licensed under the [MIT License](LICENSE).  
+   ```bash
+   aws configure
+   ```
 
-![image](https://github.com/user-attachments/assets/e773799f-f44d-4362-8695-acc4e7229eda)
-![image](https://github.com/user-attachments/assets/25fdbe08-193f-4074-b312-e2d4652236d7)
-![image](https://github.com/user-attachments/assets/8e1adcc9-fa9d-4a57-a459-0e9d7227d5d6)
+2. **Clone Repository**
 
+   ```bash
+   git clone https://github.com/yourusername/recyclenet.git
+   cd recyclenet
+   ```
+
+3. **Install Dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure Environment Variables**
+
+   ```bash
+   cp .env.example .env
+   # Edit .env with your AWS and Django settings
+   ```
+
+5. **Run Development Server**
+   ```bash
+   python manage.py migrate
+   python manage.py runserver
+   ```
+
+## Usage
+
+### For Users
+
+1. Upload images of recyclable items through the web interface
+2. Receive object detection results with bounding boxes and classifications
+3. Use the VLM Assistant for recycling guidance and questions
+
+### For Administrators
+
+1. Manage datasets and launch training jobs
+2. Monitor model performance and training metrics
+3. Review and promote best-performing models to production
+4. Access comprehensive logs and debugging information
+
+## Future Enhancements
+
+- Multi-tenant support
+- Real-time data labeling integration
+- Hybrid cloud deployment options
+- Mobile application interface
+- Enhanced VLM capabilities with more knowledge sources
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
