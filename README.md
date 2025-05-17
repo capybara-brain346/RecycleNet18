@@ -1,6 +1,5 @@
 # RecycleNet: Recyclable Items Classification and Chatbot Guide
-
-## Demo: [Watch on YouTube](https://www.youtube.com/watch?v=K3wz3cSf9is)
+![diagram-export-5-17-2025-10_13_05-PM](https://github.com/user-attachments/assets/8ef414ef-da44-4d7e-bae4-2c35dc1ed5ad)
 
 ---
 
