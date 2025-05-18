@@ -25,60 +25,90 @@
 - Configure AWS Services
   - Create IAM roles with necessary permissions
   - Set up S3 buckets for datasets and models
-  - Create DynamoDB tables
+  - Set up DynamoDB tables
+  - Configure boto3 for DynamoDB access
   - Upload labeled dataset to S3
 
 ### Afternoon: SageMaker Environment
 
 - SageMaker Configuration
   - Set up ml.g5.2xlarge instance template
-  - Test YOLOv8 training script
-  - Verify dataset access from SageMaker
-  - Test basic model training
+  - Configure PyTorch container for multi-object detection
+  - Create S3 bucket structure for dataset organization
+  - Set up training script with YOLOv8 PyTorch implementation
+  - Configure data loading from S3 bucket
+  - Set up model checkpointing to S3
+  - Test basic model training with sample data
 
 ## Day 3
 
-### Morning: Local Django Setup
+### Morning: Local Flask Setup
 
 - Local Development Environment
   - Set up Python virtual environment
-  - Initialize Django project
+  - Initialize Flask project structure
   - Configure AWS credentials
-  - Install required packages
+  - Install required packages:
+    - Flask
+    - Flask-JWT-Extended
+    - Flask-RESTful
+    - boto3
+    - aws-dynamodb-utils
 
-### Afternoon: Core Django Development
+### Afternoon: Core API Development
 
 - Basic Features Implementation
-  - Create Django models
+
+  - Create DynamoDB table schemas
   - Implement S3 integration
-  - Build admin interface
-  - Add DynamoDB integration
+  - Set up API blueprints
+  - Add boto3 DynamoDB integration
+  - Implement JWT authentication
+
+- API Endpoint Development
+  - Create dataset management endpoints
+  - Build training configuration endpoints
+  - Implement job monitoring endpoints
+  - Add metrics retrieval endpoints
+  - Set up model version control endpoints
+  - Implement A/B testing endpoints
 
 ## Day 4
 
 ### Morning: Training Pipeline
 
-- Django-SageMaker Integration
-  - Implement training job launcher
-  - Create status monitoring
-  - Build metrics collection
-  - Develop model promotion workflow
+- Flask-SageMaker Integration
+  - Implement training job launcher with PyTorch container configuration
+  - Set up S3 data channels for training/validation sets
+  - Configure model checkpointing and artifact storage
+  - Create status monitoring for multi-object detection metrics
+  - Build comprehensive metrics collection:
+    - Per-class detection metrics
+    - Multi-object detection performance
+    - Training/validation curves
+  - Develop model promotion workflow with versioning
+  - Add A/B testing capabilities between model versions
+  - Implement automated early stopping
+  - Add distributed training support
+  - Create training job queuing system
 
 ### Afternoon: Inference API
 
 - API Development
-  - Create `/predict/` endpoint
+  - Create `/predict` endpoint
   - Implement SageMaker endpoint
   - Add model caching
   - Build response handling
+  - Add inference logging
 
 ## Day 5 (Wednesday)
 
 ### Morning: Testing & Deployment Prep
 
 - Testing
-  - End-to-end testing
-  - Load testing
+  - API endpoint testing
+  - Load testing with locust
+  - Integration testing
   - Bug fixes
 - EC2 Setup
   - Configure EC2 instance
@@ -87,24 +117,24 @@
 ### Afternoon: Deployment & Documentation
 
 - Final Deployment
-  - Deploy Django application
+  - Deploy Flask application
   - Production testing
-  - Create documentation
+  - Create API documentation with Swagger/OpenAPI
   - System verification
 
 ## Critical Path Dependencies
 
 1. Dataset labeling must be complete before AWS setup
-2. AWS services must be ready before Django development
+2. AWS services must be ready before Flask development
 3. SageMaker training must work with labeled dataset
-4. Local development must be complete before deployment
+4. API endpoints must be complete before deployment
 
 ## MVP Features Priority
 
 1. Properly labeled dataset
 2. AWS Infrastructure
-3. Dataset management
-4. Training pipeline
+3. Dataset management API
+4. Training pipeline API
 5. Inference API
 
 ## Risk Mitigation
@@ -112,7 +142,8 @@
 - Take regular breaks during labeling to maintain accuracy
 - Back up labeled dataset frequently
 - Test model training with a small subset first
-- Document labeling decisions for consistency
+- Document API endpoints thoroughly
+- Implement proper error handling and validation
 
 ## Documentation Deliverables
 
@@ -120,13 +151,22 @@
    - Labeling conventions used
    - Class distribution
    - Data splits information
-2. Setup Guide
+2. API Documentation
+   - OpenAPI/Swagger specs
+   - Authentication guide
+   - Endpoint descriptions
+   - Request/response examples
+3. Setup Guide
    - AWS configuration
+   - DynamoDB setup with boto3
    - Local development
    - Deployment steps
-3. User/Admin Guide
-   - System usage
-   - Maintenance procedures
+4. Technical Guide
+   - Training configuration
+   - Hyperparameter tuning best practices
+   - Model version management
+   - A/B testing procedures
+   - DynamoDB data modeling best practices
 
 ## Deferred Features
 
@@ -134,3 +174,4 @@
 - Advanced monitoring
 - Multi-organization support
 - Real-time streaming inference
+- Web UI/Admin dashboard
