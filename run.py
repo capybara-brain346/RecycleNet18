@@ -1,0 +1,28 @@
+from flask import Flask
+from flask_cors import CORS
+from config import Config
+from backend.routes.dataset import dataset_bp
+from backend.routes.training import training_bp
+from backend.routes.model import model_bp
+from backend.routes.inference import inference_bp
+from backend.routes.frontend import frontend_bp
+
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+
+    CORS(app)
+
+    app.register_blueprint(frontend_bp)
+    app.register_blueprint(dataset_bp, url_prefix="/backend/v1/datasets")
+    app.register_blueprint(training_bp, url_prefix="/backend/v1/training")
+    app.register_blueprint(model_bp, url_prefix="/backend/v1/models")
+    app.register_blueprint(inference_bp, url_prefix="/backend/v1/predict")
+
+    return app
+
+
+if __name__ == "__main__":
+    app = create_app()
+    app.run(host="0.0.0.0", port=5000)

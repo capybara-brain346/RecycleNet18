@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
-from api.services.training_service import TrainingService
+from backend.services.training_service import TrainingService
 
 training_bp = Blueprint("training", __name__)
 training_service = TrainingService()

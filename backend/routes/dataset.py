@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from api.services.dataset_service import DatasetService
+from backend.services.dataset_service import DatasetService
 
 dataset_bp = Blueprint("dataset", __name__)
 dataset_service = DatasetService()

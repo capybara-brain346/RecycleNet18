@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from api.services.inference_service import InferenceService
+from backend.services.inference_service import InferenceService
 
 inference_bp = Blueprint("inference", __name__)
 inference_service = InferenceService()

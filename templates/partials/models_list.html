@@ -1,0 +1,20 @@
+<div class="space-y-4">
+    {% for model in models.Items %}
+    <div class="border p-4 rounded">
+        <div class="flex justify-between items-center">
+            <div>
+                <h3 class="font-semibold">{{ model.model_id }}</h3>
+                <p class="text-sm text-gray-600">Status: {{ model.status }}</p>
+                <p class="text-sm text-gray-600">Created: {{ model.timestamp }}</p>
+            </div>
+            {% if model.status != "production" %}
+            <button hx-post="/backend/v1/models/{{ model.model_id }}/promote"
+                    hx-trigger="click"
+                    class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
+                Promote to Production
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
