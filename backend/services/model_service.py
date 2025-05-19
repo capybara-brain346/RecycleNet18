@@ -1,3 +1,5 @@
+import os
+import shutil
 from backend.utils.aws import AWSManager
 from config import Config
 
@@ -5,6 +7,7 @@ from config import Config
 class ModelService:
     def __init__(self):
         self.aws = AWSManager()
+        os.makedirs(Config.MODEL_FOLDER, exist_ok=True)
 
     def list_models(self):
         response = self.aws.models_table.scan()
@@ -19,50 +22,11 @@ class ModelService:
         if not model:
             return None
 
+        model_path = model.get("model_path")
+        if not model_path or not os.path.exists(model_path):
+            return None
+
         self.aws.promote_model_to_production(model_id)
-
-        endpoint_name = "recyclenet-production"
-        model_path = model["s3_path"]
-
-        self.aws.sagemaker.create_model(
-            ModelName=f"recyclenet-model-{model_id}",
-            PrimaryContainer={
-                "Image": f"{Config.AWS_REGION}.amazonaws.com/pytorch-inference:1.8.1-gpu-py36",
-                "ModelDataUrl": model_path,
-                "Environment": {
-                    "SAGEMAKER_PROGRAM": "inference.py",
-                    "SAGEMAKER_SUBMIT_DIRECTORY": "/opt/ml/model/code",
-                    "SAGEMAKER_CONTAINER_LOG_LEVEL": "20",
-                    "SAGEMAKER_REGION": Config.AWS_REGION,
-                },
-            },
-            ExecutionRoleArn=Config.SAGEMAKER_ROLE,
-        )
-
-        self.aws.sagemaker.create_endpoint_config(
-            EndpointConfigName=f"recyclenet-config-{model_id}",
-            ProductionVariants=[
-                {
-                    "VariantName": "AllTraffic",
-                    "ModelName": f"recyclenet-model-{model_id}",
-                    "InstanceType": "ml.g4dn.xlarge",
-                    "InitialInstanceCount": 1,
-                    "InitialVariantWeight": 1,
-                }
-            ],
-        )
-
-        try:
-            self.aws.sagemaker.create_endpoint(
-                EndpointName=endpoint_name,
-                EndpointConfigName=f"recyclenet-config-{model_id}",
-            )
-        except self.aws.sagemaker.exceptions.ClientError:
-            self.aws.sagemaker.update_endpoint(
-                EndpointName=endpoint_name,
-                EndpointConfigName=f"recyclenet-config-{model_id}",
-            )
-
         return model_id
 
     def get_production_model(self):

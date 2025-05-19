@@ -21,13 +21,6 @@ class AWSManager:
             region_name=Config.AWS_REGION,
         )
 
-        self.sagemaker = boto3.client(
-            "sagemaker",
-            aws_access_key_id=Config.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY,
-            region_name=Config.AWS_REGION,
-        )
-
         self.models_table = self.dynamodb.Table(Config.DYNAMODB_MODELS_TABLE)
         self.training_jobs_table = self.dynamodb.Table(
             Config.DYNAMODB_TRAINING_JOBS_TABLE
@@ -62,7 +55,6 @@ class AWSManager:
         item = {
             "job_id": job_id,
             "start_time": datetime.utcnow().isoformat(),
-            "status": "pending",
             **job_data,
         }
         self.training_jobs_table.put_item(Item=item)

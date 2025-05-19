@@ -1,54 +1,96 @@
+import os
+import json
+from datetime import datetime
 from backend.utils.aws import AWSManager
 from config import Config
-import boto3
+from ultralytics import YOLO
+import shutil
 
 
 class TrainingService:
     def __init__(self):
         self.aws = AWSManager()
+        os.makedirs(Config.TRAINING_OUTPUT_FOLDER, exist_ok=True)
+        os.makedirs(Config.MODEL_FOLDER, exist_ok=True)
 
     def start_training(self, dataset_id, hyperparameters):
         job_data = {
             "dataset_id": dataset_id,
             "hyperparameters": hyperparameters,
-            "instance_type": Config.SAGEMAKER_INSTANCE_TYPE,
+            "status": "running",
         }
 
         job_id = self.aws.create_training_job(job_data)
 
-        training_params = {
-            "TrainingJobName": f"recyclenet-training-{job_id}",
-            "AlgorithmSpecification": {
-                "TrainingImage": f"{Config.AWS_REGION}.amazonaws.com/pytorch-training:1.8.1-gpu-py36",
-                "TrainingInputMode": "File",
-            },
-            "RoleArn": Config.SAGEMAKER_ROLE,
-            "InputDataConfig": [
-                {
-                    "ChannelName": "training",
-                    "DataSource": {
-                        "S3DataSource": {
-                            "S3DataType": "S3Prefix",
-                            "S3Uri": f"s3://{Config.S3_DATASET_BUCKET}/{dataset_id}",
-                            "S3DataDistributionType": "FullyReplicated",
-                        }
-                    },
-                }
-            ],
-            "OutputDataConfig": {
-                "S3OutputPath": f"s3://{Config.S3_MODEL_BUCKET}/training-output"
-            },
-            "ResourceConfig": {
-                "InstanceType": Config.SAGEMAKER_INSTANCE_TYPE,
-                "InstanceCount": 1,
-                "VolumeSizeInGB": 50,
-            },
-            "HyperParameters": hyperparameters,
-            "StoppingCondition": {"MaxRuntimeInSeconds": 86400},
-        }
+        try:
+            model = YOLO("yolov8n.pt")
 
-        self.aws.sagemaker.create_training_job(**training_params)
-        return job_id
+            dataset_yaml = os.path.join(
+                Config.DATASET_FOLDER, dataset_id, "dataset.yaml"
+            )
+
+            training_args = {
+                "data": dataset_yaml,
+                "epochs": hyperparameters.get("epochs", 100),
+                "batch": hyperparameters.get("batch_size", 16),
+                "imgsz": hyperparameters.get("image_size", 640),
+                "patience": hyperparameters.get("patience", 50),
+                "device": hyperparameters.get("device", "cuda"),
+                "project": Config.TRAINING_OUTPUT_FOLDER,
+                "name": job_id,
+                "exist_ok": True,
+            }
+
+            results = model.train(**training_args)
+
+            run_folder = os.path.join(Config.TRAINING_OUTPUT_FOLDER, job_id)
+            model_path = os.path.join(run_folder, "weights", "best.pt")
+            final_model_path = os.path.join(Config.MODEL_FOLDER, f"{job_id}.pt")
+
+            shutil.copy2(model_path, final_model_path)
+
+            metrics_path = os.path.join(
+                Config.TRAINING_OUTPUT_FOLDER, f"{job_id}_metrics.json"
+            )
+
+            metrics = []
+            for epoch in range(len(results.results_dict["metrics/precision(B)"])):
+                metrics.append(
+                    {
+                        "epoch": epoch,
+                        "precision": results.results_dict["metrics/precision(B)"][
+                            epoch
+                        ],
+                        "recall": results.results_dict["metrics/recall(B)"][epoch],
+                        "mAP50": results.results_dict["metrics/mAP50(B)"][epoch],
+                        "mAP50-95": results.results_dict["metrics/mAP50-95(B)"][epoch],
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
+
+            with open(metrics_path, "w") as f:
+                json.dump(metrics, f)
+
+            self.aws.training_jobs_table.update_item(
+                Key={"job_id": job_id},
+                UpdateExpression="SET #status = :status, model_path = :model_path",
+                ExpressionAttributeNames={"#status": "status"},
+                ExpressionAttributeValues={
+                    ":status": "completed",
+                    ":model_path": final_model_path,
+                },
+            )
+
+            return job_id
+
+        except Exception as e:
+            self.aws.training_jobs_table.update_item(
+                Key={"job_id": job_id},
+                UpdateExpression="SET #status = :status, error = :error",
+                ExpressionAttributeNames={"#status": "status"},
+                ExpressionAttributeValues={":status": "failed", ":error": str(e)},
+            )
+            raise e
 
     def list_jobs(self):
         response = self.aws.training_jobs_table.scan()
@@ -61,48 +103,20 @@ class TrainingService:
         if not job:
             return None
 
-        sagemaker_job_name = f"recyclenet-training-{job_id}"
-        try:
-            sagemaker_response = self.aws.sagemaker.describe_training_job(
-                TrainingJobName=sagemaker_job_name
-            )
-            job["sagemaker_status"] = sagemaker_response["TrainingJobStatus"]
-            job["metrics"] = sagemaker_response.get("FinalMetricDataList", [])
-        except self.aws.sagemaker.exceptions.ResourceNotFound:
-            job["sagemaker_status"] = "NotFound"
+        metrics_path = os.path.join(
+            Config.TRAINING_OUTPUT_FOLDER, f"{job_id}_metrics.json"
+        )
+        if os.path.exists(metrics_path):
+            with open(metrics_path) as f:
+                job["metrics"] = json.load(f)
 
         return job
 
     def get_training_metrics(self, job_id):
-        cloudwatch = boto3.client(
-            "cloudwatch",
-            aws_access_key_id=Config.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY,
-            region_name=Config.AWS_REGION,
+        metrics_path = os.path.join(
+            Config.TRAINING_OUTPUT_FOLDER, f"{job_id}_metrics.json"
         )
-
-        metrics = cloudwatch.get_metric_data(
-            MetricDataQueries=[
-                {
-                    "Id": "training_loss",
-                    "MetricStat": {
-                        "Metric": {
-                            "Namespace": "AWS/SageMaker",
-                            "MetricName": "loss",
-                            "Dimensions": [
-                                {
-                                    "Name": "TrainingJobName",
-                                    "Value": f"recyclenet-training-{job_id}",
-                                }
-                            ],
-                        },
-                        "Period": 60,
-                        "Stat": "Average",
-                    },
-                }
-            ],
-            StartTime="-1H",
-            EndTime="0H",
-        )
-
-        return metrics["MetricDataResults"]
+        if os.path.exists(metrics_path):
+            with open(metrics_path) as f:
+                return json.load(f)
+        return []

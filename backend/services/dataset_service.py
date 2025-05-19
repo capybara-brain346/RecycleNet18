@@ -8,7 +8,7 @@ class DatasetService:
     def __init__(self):
         self.aws = AWSManager()
 
-    def upload_dataset(self, file):
+    def upload_dataset(self, file, is_annotated=False):
         filename = secure_filename(file.filename)
         temp_path = os.path.join(Config.UPLOAD_FOLDER, filename)
 
@@ -16,14 +16,20 @@ class DatasetService:
 
         file.save(temp_path)
 
-        s3_path = self.aws.upload_file_to_s3(temp_path, Config.S3_DATASET_BUCKET)
+        prefix = "annotated-data" if is_annotated else "raw-data"
+        s3_path = self.aws.upload_file_to_s3(
+            temp_path, Config.S3_BUCKET, f"{prefix}/{filename}"
+        )
 
         os.remove(temp_path)
 
         return s3_path
 
-    def list_datasets(self):
-        response = self.aws.s3.list_objects_v2(Bucket=Config.S3_DATASET_BUCKET)
+    def list_datasets(self, data_type="raw"):
+        prefix = "annotated-data" if data_type == "annotated" else "raw-data"
+        response = self.aws.s3.list_objects_v2(
+            Bucket=Config.S3_BUCKET, Prefix=f"{prefix}/"
+        )
         datasets = []
 
         for obj in response.get("Contents", []):
@@ -37,9 +43,10 @@ class DatasetService:
 
         return datasets
 
-    def get_dataset(self, dataset_id):
+    def get_dataset(self, dataset_id, data_type="raw"):
+        prefix = "annotated-data" if data_type == "annotated" else "raw-data"
         response = self.aws.s3.head_object(
-            Bucket=Config.S3_DATASET_BUCKET, Key=dataset_id
+            Bucket=Config.S3_BUCKET, Key=f"{prefix}/{dataset_id}"
         )
 
         return {

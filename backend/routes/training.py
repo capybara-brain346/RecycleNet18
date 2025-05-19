@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
 from backend.services.training_service import TrainingService
 
 training_bp = Blueprint("training", __name__)
@@ -7,17 +6,34 @@ training_service = TrainingService()
 
 
 @training_bp.route("/start", methods=["POST"])
-@jwt_required()
 def start_training():
     data = request.get_json()
 
-    required_fields = ["dataset_id", "hyperparameters"]
+    required_fields = ["dataset_id"]
     if not all(field in data for field in required_fields):
         return jsonify({"error": "Missing required fields"}), 400
 
+    hyperparameters = data.get("hyperparameters", {})
+    valid_hyperparams = {
+        "epochs": int,
+        "batch_size": int,
+        "image_size": int,
+        "patience": int,
+        "device": str,
+    }
+
+    for param, value in hyperparameters.items():
+        if param in valid_hyperparams:
+            try:
+                hyperparameters[param] = valid_hyperparams[param](value)
+            except (ValueError, TypeError):
+                return jsonify(
+                    {"error": f"Invalid value for hyperparameter: {param}"}
+                ), 400
+
     try:
         job_id = training_service.start_training(
-            dataset_id=data["dataset_id"], hyperparameters=data["hyperparameters"]
+            dataset_id=data["dataset_id"], hyperparameters=hyperparameters
         )
         return jsonify(
             {"message": "Training job started successfully", "job_id": job_id}
@@ -27,7 +43,6 @@ def start_training():
 
 
 @training_bp.route("/jobs", methods=["GET"])
-@jwt_required()
 def list_jobs():
     try:
         jobs = training_service.list_jobs()
@@ -37,7 +52,6 @@ def list_jobs():
 
 
 @training_bp.route("/jobs/<job_id>", methods=["GET"])
-@jwt_required()
 def get_job_status(job_id):
     try:
         job = training_service.get_job_status(job_id)
@@ -49,7 +63,6 @@ def get_job_status(job_id):
 
 
 @training_bp.route("/jobs/<job_id>/metrics", methods=["GET"])
-@jwt_required()
 def get_training_metrics(job_id):
     try:
         metrics = training_service.get_training_metrics(job_id)
