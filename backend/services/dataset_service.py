@@ -55,3 +55,23 @@ class DatasetService:
             "last_modified": response["LastModified"].isoformat(),
             "metadata": response.get("Metadata", {}),
         }
+
+    def download_dataset(self, dataset_id):
+        dataset_path = os.path.join(Config.DATASET_FOLDER, dataset_id)
+        os.makedirs(dataset_path, exist_ok=True)
+
+        try:
+            response = self.aws.s3.list_objects_v2(
+                Bucket=Config.S3_BUCKET, Prefix=f"annotated-data/{dataset_id}/"
+            )
+
+            for obj in response.get("Contents", []):
+                local_path = os.path.join(Config.DATASET_FOLDER, obj["Key"])
+                os.makedirs(os.path.dirname(local_path), exist_ok=True)
+
+                self.aws.s3.download_file(Config.S3_BUCKET, obj["Key"], local_path)
+
+            return dataset_path
+
+        except Exception as e:
+            raise Exception(f"Failed to download dataset: {str(e)}")

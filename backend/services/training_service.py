@@ -2,6 +2,7 @@ import os
 import json
 from datetime import datetime
 from backend.utils.aws import AWSManager
+from backend.services.dataset_service import DatasetService
 from config import Config
 from ultralytics import YOLO
 import shutil
@@ -10,6 +11,7 @@ import shutil
 class TrainingService:
     def __init__(self):
         self.aws = AWSManager()
+        self.dataset_service = DatasetService()
         os.makedirs(Config.TRAINING_OUTPUT_FOLDER, exist_ok=True)
         os.makedirs(Config.MODEL_FOLDER, exist_ok=True)
 
@@ -23,6 +25,8 @@ class TrainingService:
         job_id = self.aws.create_training_job(job_data)
 
         try:
+            self.dataset_service.download_dataset(dataset_id)
+
             model = YOLO("yolov8n.pt")
 
             dataset_yaml = os.path.join(

@@ -18,9 +18,11 @@ def predict():
         result = inference_service.predict(file)
         if not result:
             return jsonify({"error": "No production model available"}), 404
-        return jsonify(result), 200
+
+        return jsonify({"status": "success", "data": result}), 200
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 @inference_bp.route("/logs", methods=["GET"])

@@ -1,12 +1,8 @@
 import os
-import torch
 from werkzeug.utils import secure_filename
-import json
 from backend.utils.aws import AWSManager
 from config import Config
-from backend.models.recyclenet import RecycleNet
-from PIL import Image
-import torchvision.transforms as transforms
+from ultralytics import YOLO
 
 
 class InferenceService:
@@ -15,8 +11,8 @@ class InferenceService:
         os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
 
     def predict(self, image_file):
-        model = self.aws.get_production_model()
-        if not model:
+        model_info = self.aws.get_production_model()
+        if not model_info:
             return None
 
         filename = secure_filename(image_file.filename)
@@ -24,49 +20,59 @@ class InferenceService:
         image_file.save(temp_path)
 
         try:
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            model_path = model.get("model_path")
-
+            model_path = model_info.get("model_path")
             if not model_path or not os.path.exists(model_path):
                 raise FileNotFoundError(f"Model file not found at {model_path}")
 
-            net = RecycleNet()
-            net.load_state_dict(torch.load(model_path, map_location=device))
-            net = net.to(device)
-            net.eval()
+            model = YOLO(model_path)
+            results = model.predict(temp_path, conf=0.25)
 
-            transform = transforms.Compose(
-                [
-                    transforms.Resize((224, 224)),
-                    transforms.ToTensor(),
-                    transforms.Normalize(
-                        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-                    ),
-                ]
+            predictions = []
+            for r in results:
+                for box, conf, cls in zip(r.boxes.xyxy, r.boxes.conf, r.boxes.cls):
+                    predictions.append(
+                        {
+                            "bbox": box.tolist(),
+                            "confidence": float(conf),
+                            "class": int(cls),
+                            "class_name": r.names[int(cls)],
+                        }
+                    )
+
+            annotated_filename = f"annotated_{filename}"
+            annotated_path = os.path.join(Config.UPLOAD_FOLDER, annotated_filename)
+
+            for r in results:
+                im_array = r.plot()
+                r.save(annotated_path)
+
+            s3_path = self.aws.upload_file_to_s3(
+                annotated_path, Config.S3_BUCKET, f"inference/{annotated_filename}"
             )
 
-            image = Image.open(temp_path).convert("RGB")
-            image_tensor = transform(image).unsqueeze(0).to(device)
-
-            with torch.no_grad():
-                output = net(image_tensor)
-                probabilities = torch.nn.functional.softmax(output, dim=1)
-                predictions = probabilities[0].tolist()
-
             os.remove(temp_path)
+            os.remove(annotated_path)
 
             inference_data = {
-                "model_id": model["model_id"],
+                "model_id": model_info["model_id"],
                 "image_path": temp_path,
+                "annotated_image_url": s3_path,
                 "predictions": predictions,
             }
             inference_id = self.aws.log_inference(inference_data)
 
-            return {"inference_id": inference_id, "predictions": predictions}
+            return {
+                "inference_id": inference_id,
+                "predictions": predictions,
+                "model_id": model_info["model_id"],
+                "annotated_image_url": s3_path,
+            }
 
         except Exception as e:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
+            if os.path.exists(annotated_path):
+                os.remove(annotated_path)
             raise e
 
     def get_inference_logs(self):

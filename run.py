@@ -3,9 +3,8 @@ from flask_cors import CORS
 from config import Config
 from backend.routes.dataset import dataset_bp
 from backend.routes.training import training_bp
-from backend.routes.model import model_bp
 from backend.routes.inference import inference_bp
-from backend.routes.frontend import frontend_bp
+from backend.routes.model import model_bp
 
 
 def create_app(config_class=Config):
@@ -14,11 +13,10 @@ def create_app(config_class=Config):
 
     CORS(app)
 
-    app.register_blueprint(frontend_bp)
-    app.register_blueprint(dataset_bp, url_prefix="/backend/v1/datasets")
-    app.register_blueprint(training_bp, url_prefix="/backend/v1/training")
-    app.register_blueprint(model_bp, url_prefix="/backend/v1/models")
-    app.register_blueprint(inference_bp, url_prefix="/backend/v1/predict")
+    app.register_blueprint(dataset_bp, url_prefix="/api/v1/datasets")
+    app.register_blueprint(training_bp, url_prefix="/api/v1/training")
+    app.register_blueprint(inference_bp, url_prefix="/api/v1/predict")
+    app.register_blueprint(model_bp, url_prefix="/api/v1/models")
 
     return app
 
