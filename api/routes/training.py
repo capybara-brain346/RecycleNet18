@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from backend.services.training_service import TrainingService
+from api.services.training_service import TrainingService
 
 training_bp = Blueprint("training", __name__)
 training_service = TrainingService()

@@ -28,12 +28,12 @@
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-xl font-semibold mb-4">Model Management</h2>
 
-                <div id="models-list" class="mb-6" hx-get="/backend/v1/models" hx-trigger="load, modelUpdated from:body"
+                <div id="models-list" class="mb-6" hx-get="/api/v1/models" hx-trigger="load, modelUpdated from:body"
                     hx-indicator=".models-loading">
                     <div class="models-loading animate-pulse">Loading models...</div>
                 </div>
 
-                <div id="production-model" class="mb-6" hx-get="/backend/v1/models/production"
+                <div id="production-model" class="mb-6" hx-get="/api/v1/models/production"
                     hx-trigger="load, modelUpdated from:body">
                 </div>
             </div>
@@ -42,7 +42,7 @@
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-xl font-semibold mb-4">Image Inference</h2>
 
-                <form hx-post="/backend/v1/predict" hx-encoding="multipart/form-data" hx-indicator="#inference-loading">
+                <form hx-post="/api/v1/predict" hx-encoding="multipart/form-data" hx-indicator="#inference-loading">
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">Upload Image</label>
                         <input type="file" name="image" accept="image/*" class="w-full p-2 border rounded">
@@ -63,10 +63,10 @@
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-xl font-semibold mb-4">Training</h2>
 
-                <form hx-post="/backend/v1/training/start" hx-indicator="#training-loading">
+                <form hx-post="/api/v1/training/start" hx-indicator="#training-loading">
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">Dataset ID</label>
-                        <select name="dataset_id" class="w-full p-2 border rounded" hx-get="/backend/v1/datasets"
+                        <select name="dataset_id" class="w-full p-2 border rounded" hx-get="/api/v1/datasets"
                             hx-trigger="load">
                         </select>
                     </div>
@@ -79,7 +79,7 @@
                     Starting training job...
                 </div>
 
-                <div id="training-jobs" hx-get="/backend/v1/training/jobs" hx-trigger="load, every 30s">
+                <div id="training-jobs" hx-get="/api/v1/training/jobs" hx-trigger="load, every 30s">
                 </div>
             </div>
 
@@ -87,7 +87,7 @@
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-xl font-semibold mb-4">Dataset Management</h2>
 
-                <form hx-post="/backend/v1/datasets/upload" hx-encoding="multipart/form-data"
+                <form hx-post="/api/v1/datasets/upload" hx-encoding="multipart/form-data"
                     hx-indicator="#dataset-loading">
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">Upload Dataset</label>
@@ -102,7 +102,7 @@
                     Uploading dataset...
                 </div>
 
-                <div id="datasets-list" hx-get="/backend/v1/datasets" hx-trigger="load, datasetUploaded from:body">
+                <div id="datasets-list" hx-get="/api/v1/datasets" hx-trigger="load, datasetUploaded from:body">
                 </div>
             </div>
 
@@ -110,7 +110,7 @@
             <div class="bg-white p-6 rounded-lg shadow-md col-span-1 md:col-span-2">
                 <h2 class="text-xl font-semibold mb-4">AI Assistant</h2>
 
-                <form hx-post="/backend/v1/assistant/query" hx-encoding="multipart/form-data"
+                <form hx-post="/api/v1/assistant/query" hx-encoding="multipart/form-data"
                     hx-indicator="#assistant-loading">
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">Question</label>

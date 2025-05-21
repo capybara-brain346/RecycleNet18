@@ -1,10 +1,10 @@
 from flask import Flask
 from flask_cors import CORS
 from config import Config
-from backend.routes.dataset import dataset_bp
-from backend.routes.training import training_bp
-from backend.routes.inference import inference_bp
-from backend.routes.model import model_bp
+from api.routes.dataset import dataset_bp
+from api.routes.training import training_bp
+from api.routes.inference import inference_bp
+from api.routes.model import model_bp
 
 
 def create_app(config_class=Config):

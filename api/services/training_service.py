@@ -1,8 +1,8 @@
 import os
 import json
 from datetime import datetime
-from backend.utils.aws import AWSManager
-from backend.services.dataset_service import DatasetService
+from api.utils.aws import AWSManager
+from api.services.dataset_service import DatasetService
 from config import Config
 from ultralytics import YOLO
 import shutil

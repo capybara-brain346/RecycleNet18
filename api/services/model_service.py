@@ -1,6 +1,6 @@
 import os
 import shutil
-from backend.utils.aws import AWSManager
+from api.utils.aws import AWSManager
 from config import Config
 
 

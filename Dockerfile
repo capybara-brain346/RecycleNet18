@@ -6,7 +6,7 @@ COPY ./requirements.txt /app/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
-COPY ./backend /app/backend
+COPY ./api /app/api
 
 EXPOSE 8080
 

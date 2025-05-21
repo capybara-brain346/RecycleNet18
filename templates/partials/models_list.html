@@ -8,7 +8,7 @@
                 <p class="text-sm text-gray-600">Created: {{ model.timestamp }}</p>
             </div>
             {% if model.status != "production" %}
-            <button hx-post="/backend/v1/models/{{ model.model_id }}/promote"
+            <button hx-post="/api/v1/models/{{ model.model_id }}/promote"
                     hx-trigger="click"
                     class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
                 Promote to Production
