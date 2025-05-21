@@ -53,6 +53,10 @@ class TrainingService:
 
             shutil.copy2(model_path, final_model_path)
 
+            s3_result = self.aws.upload_file_to_s3(
+                final_model_path, Config.AWS_S3_BUCKET, f"model-files/{job_id}.pt"
+            )
+
             metrics_path = os.path.join(
                 Config.TRAINING_OUTPUT_FOLDER, f"{job_id}_metrics.json"
             )
@@ -77,11 +81,12 @@ class TrainingService:
 
             self.aws.training_jobs_table.update_item(
                 Key={"job_id": job_id},
-                UpdateExpression="SET #status = :status, model_path = :model_path",
+                UpdateExpression="SET #status = :status, model_path = :model_path, s3_model_path = :s3_model_path",
                 ExpressionAttributeNames={"#status": "status"},
                 ExpressionAttributeValues={
                     ":status": "completed",
                     ":model_path": final_model_path,
+                    ":s3_model_path": s3_result["s3_url"] if s3_result else None,
                 },
             )
 

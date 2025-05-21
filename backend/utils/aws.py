@@ -35,7 +35,8 @@ class AWSManager:
 
         try:
             self.s3.upload_file(file_path, bucket, object_name)
-            return f"s3://{bucket}/{object_name}"
+            s3_url = f"s3://{bucket}/{object_name}"
+            return {"s3_url": s3_url, "object_name": object_name}
         except ClientError as e:
             return None
 
