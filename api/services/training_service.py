@@ -29,13 +29,13 @@ class TrainingService:
 
             model = YOLO("yolov8n.pt")
 
-            dataset_yaml = os.path.join(
-                Config.DATASET_FOLDER, dataset_id, "dataset.yaml"
+            dataset_yaml = os.path.abspath(
+                os.path.join(Config.DATASET_FOLDER, dataset_id, "data.yaml")
             )
 
             training_args = {
                 "data": dataset_yaml,
-                "epochs": hyperparameters.get("epochs", 100),
+                "epochs": hyperparameters.get("epochs", 1),
                 "batch": hyperparameters.get("batch_size", 16),
                 "imgsz": hyperparameters.get("image_size", 640),
                 "patience": hyperparameters.get("patience", 50),
@@ -62,16 +62,31 @@ class TrainingService:
             )
 
             metrics = []
-            for epoch in range(len(results.results_dict["metrics/precision(B)"])):
+            precision_data = results.results_dict["metrics/precision(B)"]
+            recall_data = results.results_dict["metrics/recall(B)"]
+            map50_data = results.results_dict["metrics/mAP50(B)"]
+            map50_95_data = results.results_dict["metrics/mAP50-95(B)"]
+
+            if hasattr(precision_data, "__len__") and len(precision_data) > 0:
+                for epoch in range(len(precision_data)):
+                    metrics.append(
+                        {
+                            "epoch": epoch,
+                            "precision": float(precision_data[epoch]),
+                            "recall": float(recall_data[epoch]),
+                            "mAP50": float(map50_data[epoch]),
+                            "mAP50-95": float(map50_95_data[epoch]),
+                            "timestamp": datetime.utcnow().isoformat(),
+                        }
+                    )
+            else:
                 metrics.append(
                     {
-                        "epoch": epoch,
-                        "precision": results.results_dict["metrics/precision(B)"][
-                            epoch
-                        ],
-                        "recall": results.results_dict["metrics/recall(B)"][epoch],
-                        "mAP50": results.results_dict["metrics/mAP50(B)"][epoch],
-                        "mAP50-95": results.results_dict["metrics/mAP50-95(B)"][epoch],
+                        "epoch": 0,
+                        "precision": float(precision_data),
+                        "recall": float(recall_data),
+                        "mAP50": float(map50_data),
+                        "mAP50-95": float(map50_95_data),
                         "timestamp": datetime.utcnow().isoformat(),
                     }
                 )
@@ -79,8 +94,17 @@ class TrainingService:
             with open(metrics_path, "w") as f:
                 json.dump(metrics, f)
 
+            model_data = {
+                "job_id": job_id,
+                "model_path": final_model_path,
+                "s3_model_path": s3_result["s3_url"] if s3_result else None,
+                "hyperparameters": hyperparameters,
+                "metrics": metrics,
+            }
+            self.aws.create_model_record(model_data)
+
             self.aws.training_jobs_table.update_item(
-                Key={"job_id": job_id},
+                Key={"training_jobs_partition": job_id},
                 UpdateExpression="SET #status = :status, model_path = :model_path, s3_model_path = :s3_model_path",
                 ExpressionAttributeNames={"#status": "status"},
                 ExpressionAttributeValues={
@@ -94,9 +118,9 @@ class TrainingService:
 
         except Exception as e:
             self.aws.training_jobs_table.update_item(
-                Key={"job_id": job_id},
-                UpdateExpression="SET #status = :status, error = :error",
-                ExpressionAttributeNames={"#status": "status"},
+                Key={"training_jobs_partition": job_id},
+                UpdateExpression="SET #status = :status, #error = :error",
+                ExpressionAttributeNames={"#status": "status", "#error": "error"},
                 ExpressionAttributeValues={":status": "failed", ":error": str(e)},
             )
             raise e
@@ -106,7 +130,9 @@ class TrainingService:
         return response.get("Items", [])
 
     def get_job_status(self, job_id):
-        response = self.aws.training_jobs_table.get_item(Key={"job_id": job_id})
+        response = self.aws.training_jobs_table.get_item(
+            Key={"training_jobs_partition": job_id}
+        )
         job = response.get("Item")
 
         if not job:

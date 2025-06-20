@@ -12,6 +12,7 @@ class Config:
     AWS_REGION = os.environ.get("AWS_REGION")
 
     S3_BUCKET = os.environ.get("S3_BUCKET")
+    AWS_S3_BUCKET = os.environ.get("S3_BUCKET")
 
     DYNAMODB_MODELS_TABLE = "models"
     DYNAMODB_TRAINING_JOBS_TABLE = "training_jobs"

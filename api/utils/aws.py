@@ -3,6 +3,8 @@ from botocore.exceptions import ClientError
 from config import Config
 import uuid
 from datetime import datetime
+import json
+from decimal import Decimal
 
 
 class AWSManager:
@@ -43,17 +45,23 @@ class AWSManager:
     def create_model_record(self, model_data):
         model_id = str(uuid.uuid4())
         item = {
+            "models_partition": model_id,
             "model_id": model_id,
             "timestamp": datetime.utcnow().isoformat(),
             "status": "created",
             **model_data,
         }
+
+        # Convert floats to Decimals for DynamoDB
+        item = json.loads(json.dumps(item), parse_float=Decimal)
+
         self.models_table.put_item(Item=item)
         return model_id
 
     def create_training_job(self, job_data):
         job_id = str(uuid.uuid4())
         item = {
+            "training_jobs_partition": job_id,
             "job_id": job_id,
             "start_time": datetime.utcnow().isoformat(),
             **job_data,
@@ -64,6 +72,7 @@ class AWSManager:
     def log_inference(self, inference_data):
         inference_id = str(uuid.uuid4())
         item = {
+            "inference_logs_partition": inference_id,
             "inference_id": inference_id,
             "timestamp": datetime.utcnow().isoformat(),
             **inference_data,
@@ -84,14 +93,14 @@ class AWSManager:
         current_prod = self.get_production_model()
         if current_prod:
             self.models_table.update_item(
-                Key={"model_id": current_prod["model_id"]},
+                Key={"models_partition": current_prod["model_id"]},
                 UpdateExpression="SET #status = :status",
                 ExpressionAttributeNames={"#status": "status"},
                 ExpressionAttributeValues={":status": "archived"},
             )
 
         self.models_table.update_item(
-            Key={"model_id": model_id},
+            Key={"models_partition": model_id},
             UpdateExpression="SET #status = :status",
             ExpressionAttributeNames={"#status": "status"},
             ExpressionAttributeValues={":status": "production"},

@@ -44,3 +44,14 @@ def get_dataset(dataset_id):
         return jsonify({"error": "Dataset not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@dataset_bp.route("/download/<dataset_id>", methods=["POST"])
+def download_dataset(dataset_id):
+    try:
+        dataset_path = dataset_service.download_dataset(dataset_id)
+        return jsonify(
+            {"message": "Dataset downloaded successfully", "local_path": dataset_path}
+        ), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

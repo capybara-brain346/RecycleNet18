@@ -43,7 +43,7 @@ class DatasetService:
 
         return datasets
 
-    def get_dataset(self, dataset_id, data_type="raw"):
+    def get_dataset(self, dataset_id, data_type="annotated"):
         prefix = "annotated-data" if data_type == "annotated" else "raw-data"
         response = self.aws.s3.head_object(
             Bucket=Config.S3_BUCKET, Key=f"{prefix}/{dataset_id}"
@@ -56,7 +56,23 @@ class DatasetService:
             "metadata": response.get("Metadata", {}),
         }
 
+    def _is_dataset_downloaded(self, dataset_id):
+        dataset_path = os.path.join(Config.DATASET_FOLDER, dataset_id)
+        if not os.path.exists(dataset_path) or not os.path.isdir(dataset_path):
+            return False
+
+        files = [
+            f
+            for f in os.listdir(dataset_path)
+            if os.path.isfile(os.path.join(dataset_path, f))
+        ]
+        return len(files) > 0
+
     def download_dataset(self, dataset_id):
+        if self._is_dataset_downloaded(dataset_id):
+            dataset_path = os.path.join(Config.DATASET_FOLDER, dataset_id)
+            return dataset_path
+
         dataset_path = os.path.join(Config.DATASET_FOLDER, dataset_id)
         os.makedirs(dataset_path, exist_ok=True)
 
@@ -65,11 +81,26 @@ class DatasetService:
                 Bucket=Config.S3_BUCKET, Prefix=f"annotated-data/{dataset_id}/"
             )
 
-            for obj in response.get("Contents", []):
-                local_path = os.path.join(Config.DATASET_FOLDER, obj["Key"])
-                os.makedirs(os.path.dirname(local_path), exist_ok=True)
+            if not response.get("Contents"):
+                raise Exception(f"No files found in S3 for dataset: {dataset_id}")
 
-                self.aws.s3.download_file(Config.S3_BUCKET, obj["Key"], local_path)
+            downloaded_files = 0
+            for obj in response.get("Contents", []):
+                s3_key = obj["Key"]
+
+                if s3_key.endswith("/"):
+                    continue
+
+                relative_path = s3_key.replace(f"annotated-data/{dataset_id}/", "")
+
+                if relative_path:
+                    local_path = os.path.join(dataset_path, relative_path)
+                    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+                    self.aws.s3.download_file(Config.S3_BUCKET, s3_key, local_path)
+                    downloaded_files += 1
+
+            if downloaded_files == 0:
+                raise Exception(f"No files were downloaded for dataset: {dataset_id}")
 
             return dataset_path
 

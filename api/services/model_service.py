@@ -14,7 +14,7 @@ class ModelService:
         return response.get("Items", [])
 
     def get_model(self, model_id):
-        response = self.aws.models_table.get_item(Key={"model_id": model_id})
+        response = self.aws.models_table.get_item(Key={"models_partition": model_id})
         return response.get("Item")
 
     def promote_model(self, model_id):
