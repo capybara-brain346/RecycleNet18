@@ -1,10 +1,11 @@
 import boto3
 from botocore.exceptions import ClientError
-from config import Config
 import uuid
 from datetime import datetime
 import json
 from decimal import Decimal
+
+from config import Config
 
 
 class AWSManager:

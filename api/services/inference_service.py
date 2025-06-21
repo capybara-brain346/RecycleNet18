@@ -1,8 +1,9 @@
 import os
 from werkzeug.utils import secure_filename
-from api.utils.aws import AWSManager
 from config import Config
 from ultralytics import YOLO
+
+from api.utils.aws import AWSManager
 
 
 class InferenceService:

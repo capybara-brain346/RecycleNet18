@@ -1,7 +1,8 @@
 import os
 from werkzeug.utils import secure_filename
-from api.utils.aws import AWSManager
 from config import Config
+
+from api.utils.aws import AWSManager
 
 
 class DatasetService:
@@ -106,3 +107,21 @@ class DatasetService:
 
         except Exception as e:
             raise Exception(f"Failed to download dataset: {str(e)}")
+
+    def flag_for_reannotation(self, image_path):
+        """
+        Flags an image for re-annotation by copying it to a special S3 prefix (e.g., 're-annotation/').
+        """
+        import os
+
+        s3_bucket = Config.S3_BUCKET
+        # Assume image_path is the S3 key (e.g., 'annotated-data/xyz/image.jpg')
+        filename = os.path.basename(image_path)
+        reannotation_key = f"re-annotation/{filename}"
+        copy_source = {"Bucket": s3_bucket, "Key": image_path}
+        self.aws.s3.copy_object(
+            Bucket=s3_bucket, CopySource=copy_source, Key=reannotation_key
+        )
+        print(
+            f"[DatasetService] Image {image_path} flagged for re-annotation as {reannotation_key}"
+        )

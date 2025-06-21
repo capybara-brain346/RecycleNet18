@@ -1,11 +1,12 @@
 import os
 import json
 from datetime import datetime
-from api.utils.aws import AWSManager
-from api.services.dataset_service import DatasetService
-from config import Config
 from ultralytics import YOLO
 import shutil
+
+from config import Config
+from api.utils.aws import AWSManager
+from api.services.dataset_service import DatasetService
 
 
 class TrainingService:

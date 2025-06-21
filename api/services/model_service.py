@@ -1,7 +1,7 @@
 import os
-import shutil
-from api.utils.aws import AWSManager
 from config import Config
+
+from api.utils.aws import AWSManager
 
 
 class ModelService:
