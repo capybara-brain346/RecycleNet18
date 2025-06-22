@@ -1,13 +1,14 @@
-from typing import TypedDict, List, Set
+from typing import TypedDict, List, Set, Union
 from datetime import datetime
 import json
 import time
+from decimal import Decimal
 
 from api.services.dataset_service import DatasetService
 from api.services.training_service import TrainingService
 from api.services.model_service import ModelService
 from api.services.inference_service import InferenceService
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph, END, START
 from langchain_groq import ChatGroq
 
 
@@ -23,11 +24,10 @@ class AgentState(TypedDict):
     messages: List[str]
 
 
-def ask_groq_llm(prompt: str) -> str:
+def ask_groq_llm(prompt: str):
     llm = ChatGroq(
         temperature=0,
-        groq_api_key="GROQ_API_KEY",
-        model_name="mixtral-8x7b-32768",
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
     )
     response = llm.invoke(prompt)
     return response.content
@@ -39,7 +39,9 @@ def detect_new_datasets(state: AgentState) -> AgentState:
     dataset_service = state["dataset_service"]
     seen_datasets = state["seen_datasets"]
     datasets = dataset_service.list_datasets(data_type="annotated")
-    new_datasets = [d for d in datasets if d not in seen_datasets]
+
+    dataset_keys = [d["key"] for d in datasets if isinstance(d, dict)]
+    new_datasets = [d for d in dataset_keys if d not in seen_datasets]
 
     if new_datasets:
         state["messages"].append(
@@ -64,7 +66,21 @@ def train_on_new_datasets(state: AgentState) -> AgentState:
         )
         try:
             llm_response = ask_groq_llm(prompt)
+            llm_response = llm_response.strip()
+            if not llm_response.startswith("{"):
+                start_idx = llm_response.find("{")
+                end_idx = llm_response.rfind("}") + 1
+                if start_idx != -1 and end_idx != 0:
+                    llm_response = llm_response[start_idx:end_idx]
+                else:
+                    raise ValueError("No valid JSON found in LLM response")
+
             hyperparameters = json.loads(llm_response)
+
+            for key, value in hyperparameters.items():
+                if isinstance(value, float):
+                    hyperparameters[key] = Decimal(str(value))
+
             state["messages"].append(
                 f"Starting training on dataset {dataset} with hyperparameters: {hyperparameters}"
             )
@@ -72,12 +88,25 @@ def train_on_new_datasets(state: AgentState) -> AgentState:
                 dataset_id=dataset, hyperparameters=hyperparameters
             )
             state["seen_datasets"].add(dataset)
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError) as e:
             state["messages"].append(
-                f"Error processing dataset {dataset}: {str(e)}. Using default hyperparameters."
+                f"Error parsing hyperparameters for dataset {dataset}: {str(e)}. Using default hyperparameters."
             )
-            job_id = training_service.start_training(dataset_id=dataset)
+            default_hyperparameters = {
+                "epochs": 100,
+                "batch_size": 16,
+                "learning_rate": Decimal("0.01"),
+                "image_size": 640,
+                "patience": 50,
+                "device": "cuda",
+            }
+            job_id = training_service.start_training(
+                dataset_id=dataset, hyperparameters=default_hyperparameters
+            )
             state["seen_datasets"].add(dataset)
+        except Exception as e:
+            state["messages"].append(f"Error processing dataset {dataset}: {str(e)}")
+            continue
 
     return state
 
@@ -93,19 +122,53 @@ def evaluate_and_promote(state: AgentState) -> AgentState:
     completed_jobs = [
         j
         for j in jobs
-        if j.get("status") == "completed" and j["id"] not in evaluated_jobs
+        if j.get("status") == "completed"
+        and j.get("training_jobs_partition") not in evaluated_jobs
     ]
 
     for job in completed_jobs:
-        job_id = job["id"]
-        new_metrics = job["metrics"]
+        job_id = job.get("training_jobs_partition")
+        if not job_id:
+            continue
+
+        job_details = training_service.get_job_status(job_id)
+        if not job_details:
+            continue
+
+        new_metrics = job_details.get("metrics", [])
+        if not new_metrics:
+            state["messages"].append(
+                f"Skipping evaluation for job {job_id}: No metrics available"
+            )
+            evaluated_jobs.add(job_id)
+            continue
+
+        latest_metrics = (
+            new_metrics[-1] if isinstance(new_metrics, list) else new_metrics
+        )
+
         prod_model = model_service.get_production_model()
-        prod_metrics = prod_model.get("metrics", {}) if prod_model else {}
+        prod_metrics = prod_model.get("metrics", []) if prod_model else []
+        latest_prod_metrics = prod_metrics[-1] if prod_metrics else {}
+
+        new_metrics_display = {
+            "mAP50-95": float(latest_metrics.get("mAP50-95", 0)),
+            "mAP50": float(latest_metrics.get("mAP50", 0)),
+            "precision": float(latest_metrics.get("precision", 0)),
+            "recall": float(latest_metrics.get("recall", 0)),
+        }
+
+        prod_metrics_display = {
+            "mAP50-95": float(latest_prod_metrics.get("mAP50-95", 0)),
+            "mAP50": float(latest_prod_metrics.get("mAP50", 0)),
+            "precision": float(latest_prod_metrics.get("precision", 0)),
+            "recall": float(latest_prod_metrics.get("recall", 0)),
+        }
 
         prompt = (
             f"Compare these two YOLOv8 models based on their metrics:\n"
-            f"New model metrics: {json.dumps(new_metrics, indent=2)}\n"
-            f"Current production model metrics: {json.dumps(prod_metrics, indent=2)}\n"
+            f"New model metrics: {json.dumps(new_metrics_display, indent=2)}\n"
+            f"Current production model metrics: {json.dumps(prod_metrics_display, indent=2)}\n"
             "Should we promote the new model to production? Consider:\n"
             "1. mAP50-95 improvement (must be >1% better)\n"
             "2. Inference speed\n"
@@ -120,7 +183,7 @@ def evaluate_and_promote(state: AgentState) -> AgentState:
             state["messages"].append(
                 f"Promoting model {job_id} to production based on superior metrics."
             )
-            model_service.promote_model(model_id=job["model_id"])
+            model_service.promote_model(model_id=job_id)
 
         evaluated_jobs.add(job_id)
 
@@ -198,6 +261,7 @@ def main():
     workflow.add_node("evaluate_and_promote", evaluate_and_promote)
     workflow.add_node("active_learning", active_learning)
 
+    workflow.add_edge(START, "detect_new_datasets")
     workflow.add_edge("detect_new_datasets", "train_on_new_datasets")
     workflow.add_edge("train_on_new_datasets", "evaluate_and_promote")
     workflow.add_edge("evaluate_and_promote", "active_learning")

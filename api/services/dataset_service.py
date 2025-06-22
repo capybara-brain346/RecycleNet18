@@ -31,18 +31,34 @@ class DatasetService:
         response = self.aws.s3.list_objects_v2(
             Bucket=Config.S3_BUCKET, Prefix=f"{prefix}/"
         )
-        datasets = []
 
+        datasets = {}
         for obj in response.get("Contents", []):
-            datasets.append(
-                {
-                    "key": obj["Key"],
-                    "size": obj["Size"],
-                    "last_modified": obj["LastModified"].isoformat(),
-                }
-            )
+            key = obj["Key"]
+            if key == f"{prefix}/" or not key.strip("/"):
+                continue
 
-        return datasets
+            parts = key.replace(f"{prefix}/", "").split("/")
+            if parts:
+                dataset_id = parts[0]
+                if dataset_id not in datasets:
+                    datasets[dataset_id] = {
+                        "key": dataset_id,
+                        "size": 0,
+                        "last_modified": obj["LastModified"].isoformat(),
+                        "file_count": 0,
+                    }
+                datasets[dataset_id]["size"] += obj["Size"]
+                datasets[dataset_id]["file_count"] += 1
+                if (
+                    obj["LastModified"].isoformat()
+                    > datasets[dataset_id]["last_modified"]
+                ):
+                    datasets[dataset_id]["last_modified"] = obj[
+                        "LastModified"
+                    ].isoformat()
+
+        return list(datasets.values())
 
     def get_dataset(self, dataset_id, data_type="annotated"):
         prefix = "annotated-data" if data_type == "annotated" else "raw-data"
@@ -74,8 +90,7 @@ class DatasetService:
             dataset_path = os.path.join(Config.DATASET_FOLDER, dataset_id)
             return dataset_path
 
-        dataset_path = os.path.join(Config.DATASET_FOLDER, dataset_id)
-        os.makedirs(dataset_path, exist_ok=True)
+        dataset_path = os.path.normpath(os.path.join(Config.DATASET_FOLDER, dataset_id))
 
         try:
             response = self.aws.s3.list_objects_v2(
@@ -95,10 +110,25 @@ class DatasetService:
                 relative_path = s3_key.replace(f"annotated-data/{dataset_id}/", "")
 
                 if relative_path:
-                    local_path = os.path.join(dataset_path, relative_path)
-                    os.makedirs(os.path.dirname(local_path), exist_ok=True)
-                    self.aws.s3.download_file(Config.S3_BUCKET, s3_key, local_path)
-                    downloaded_files += 1
+                    local_path = os.path.normpath(
+                        os.path.join(dataset_path, relative_path)
+                    )
+                    dir_path = os.path.dirname(local_path)
+
+                    try:
+                        if not os.path.exists(dir_path):
+                            os.makedirs(dir_path)
+                    except FileExistsError:
+                        pass
+
+                    try:
+                        if not os.path.exists(local_path):
+                            self.aws.s3.download_file(
+                                Config.S3_BUCKET, s3_key, local_path
+                            )
+                        downloaded_files += 1
+                    except FileExistsError:
+                        downloaded_files += 1
 
             if downloaded_files == 0:
                 raise Exception(f"No files were downloaded for dataset: {dataset_id}")
@@ -109,13 +139,9 @@ class DatasetService:
             raise Exception(f"Failed to download dataset: {str(e)}")
 
     def flag_for_reannotation(self, image_path):
-        """
-        Flags an image for re-annotation by copying it to a special S3 prefix (e.g., 're-annotation/').
-        """
         import os
 
         s3_bucket = Config.S3_BUCKET
-        # Assume image_path is the S3 key (e.g., 'annotated-data/xyz/image.jpg')
         filename = os.path.basename(image_path)
         reannotation_key = f"re-annotation/{filename}"
         copy_source = {"Bucket": s3_bucket, "Key": image_path}

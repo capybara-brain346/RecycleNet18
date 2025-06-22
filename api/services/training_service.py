@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 from ultralytics import YOLO
 import shutil
+from decimal import Decimal
 
 from config import Config
 from api.utils.aws import AWSManager
@@ -16,14 +17,25 @@ class TrainingService:
         os.makedirs(Config.TRAINING_OUTPUT_FOLDER, exist_ok=True)
         os.makedirs(Config.MODEL_FOLDER, exist_ok=True)
 
-    def start_training(self, dataset_id, hyperparameters):
-        job_data = {
-            "dataset_id": dataset_id,
-            "hyperparameters": hyperparameters,
-            "status": "running",
-        }
+    def _convert_to_decimal(self, value):
+        if isinstance(value, float):
+            return Decimal(str(value))
+        elif isinstance(value, dict):
+            return {k: self._convert_to_decimal(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            return [self._convert_to_decimal(item) for item in value]
+        return value
 
-        job_id = self.aws.create_training_job(job_data)
+    def start_training(self, dataset_id, hyperparameters={}):
+        hyperparameters = self._convert_to_decimal(hyperparameters)
+
+        job_id = self.aws.create_training_job(
+            {
+                "dataset_id": dataset_id,
+                "hyperparameters": hyperparameters,
+                "status": "running",
+            }
+        )
 
         try:
             self.dataset_service.download_dataset(dataset_id)
@@ -36,15 +48,17 @@ class TrainingService:
 
             training_args = {
                 "data": dataset_yaml,
-                "epochs": hyperparameters.get("epochs", 1),
-                "batch": hyperparameters.get("batch_size", 16),
-                "imgsz": hyperparameters.get("image_size", 640),
-                "patience": hyperparameters.get("patience", 50),
+                "epochs": int(hyperparameters.get("epochs", 1)),
+                "batch": int(hyperparameters.get("batch_size", 16)),
+                "imgsz": int(hyperparameters.get("image_size", 640)),
+                "patience": int(hyperparameters.get("patience", 50)),
                 "device": hyperparameters.get("device", "cuda"),
                 "project": Config.TRAINING_OUTPUT_FOLDER,
                 "name": job_id,
                 "exist_ok": True,
             }
+            if "learning_rate" in hyperparameters:
+                training_args["lr0"] = float(hyperparameters["learning_rate"])
 
             results = model.train(**training_args)
 
@@ -73,10 +87,16 @@ class TrainingService:
                     metrics.append(
                         {
                             "epoch": epoch,
-                            "precision": float(precision_data[epoch]),
-                            "recall": float(recall_data[epoch]),
-                            "mAP50": float(map50_data[epoch]),
-                            "mAP50-95": float(map50_95_data[epoch]),
+                            "precision": self._convert_to_decimal(
+                                float(precision_data[epoch])
+                            ),
+                            "recall": self._convert_to_decimal(
+                                float(recall_data[epoch])
+                            ),
+                            "mAP50": self._convert_to_decimal(float(map50_data[epoch])),
+                            "mAP50-95": self._convert_to_decimal(
+                                float(map50_95_data[epoch])
+                            ),
                             "timestamp": datetime.utcnow().isoformat(),
                         }
                     )
@@ -84,10 +104,10 @@ class TrainingService:
                 metrics.append(
                     {
                         "epoch": 0,
-                        "precision": float(precision_data),
-                        "recall": float(recall_data),
-                        "mAP50": float(map50_data),
-                        "mAP50-95": float(map50_95_data),
+                        "precision": self._convert_to_decimal(float(precision_data)),
+                        "recall": self._convert_to_decimal(float(recall_data)),
+                        "mAP50": self._convert_to_decimal(float(map50_data)),
+                        "mAP50-95": self._convert_to_decimal(float(map50_95_data)),
                         "timestamp": datetime.utcnow().isoformat(),
                     }
                 )
@@ -106,12 +126,13 @@ class TrainingService:
 
             self.aws.training_jobs_table.update_item(
                 Key={"training_jobs_partition": job_id},
-                UpdateExpression="SET #status = :status, model_path = :model_path, s3_model_path = :s3_model_path",
+                UpdateExpression="SET #status = :status, model_path = :model_path, s3_model_path = :s3_model_path, metrics = :metrics",
                 ExpressionAttributeNames={"#status": "status"},
                 ExpressionAttributeValues={
                     ":status": "completed",
                     ":model_path": final_model_path,
                     ":s3_model_path": s3_result["s3_url"] if s3_result else None,
+                    ":metrics": metrics,
                 },
             )
 
